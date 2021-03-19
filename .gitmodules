@@ -1,0 +1,3 @@
+[submodule "extern/fivethirtyeight_data"]
+	path = extern/fivethirtyeight_data
+	url = https://github.com/fivethirtyeight/data.git
