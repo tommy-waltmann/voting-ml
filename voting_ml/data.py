@@ -8,6 +8,11 @@ class PollDataProxy:
     assignment. It uses a pandas dataframe object to allow access to the answers
     to the poll questions as properties of the class. Ideally all the pandas in
     this project will appear in this file and only in this file.
+
+    Args:
+        remove_nan (bool):
+            Whether values returned by this instance should include empty answers
+            to the questions.
     """
 
     def __init__(self, remove_nan=False):
