@@ -1,5 +1,6 @@
 import data
 import graphviz
+import numpy as np
 import sklearn
 from sklearn import tree
 
@@ -48,8 +49,18 @@ def get_feature_questions(poll_data):
     q27 = ["Q27_{}".format(i) for i in range(1, 7)]
     q28 = ["Q28_{}".format(i) for i in range(1, 9)]
     q29 = ["Q29_{}".format(i) for i in range(1, 11)]
+    q30 = ["Q30"]
+    q31 = ["Q31"]
+    q32 = ["Q32"]
+    q33 = ["Q33"]
+    age = ["ppage"]
+    gender = ["gender"]
+    race = ["race"]
+    income = ["income_cat"]
+    voting = ["voter_category"]
+    education = ["educ"]
 
-    feature_questions = q2 +
+    feature_questions = q21 + voting
 
 
     return feature_questions
@@ -60,15 +71,16 @@ def main():
 
     feature_questions = get_feature_questions(poll_data)
     responses = poll_data.all_data(feature_questions)
+    np.random.shuffle(responses)
     print("Number of samples: {}".format(len(responses)))
     print("Number of features: {}".format(len(responses[0]) - 1))
 
     outputs = responses[:, -1]
     inputs = responses[:, :-1]
-    train_x = inputs[:4500]
-    train_y = outputs[:4500]
-    test_x = inputs[4500:]
-    test_y = outputs[4500:]
+    train_x = inputs[:5000]
+    train_y = outputs[:5000]
+    test_x = inputs[5000:]
+    test_y = outputs[5000:]
 
     classifier = tree.DecisionTreeClassifier()
     classifier.fit(train_x, train_y)
