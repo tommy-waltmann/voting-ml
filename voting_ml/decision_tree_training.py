@@ -60,7 +60,7 @@ def get_feature_questions(poll_data):
     voting = ["voter_category"]
     education = ["educ"]
 
-    feature_questions = q21 + voting
+    feature_questions = q20 + q27 + q16 + voting
 
 
     return feature_questions
@@ -90,6 +90,11 @@ def main():
 
     feature_names = ordered_difference(feature_questions, ["voter_category"])
     class_names = ["rarely/never", "sporadic", "always"]
+
+    # This will output a graph.dot file with the decision tree data. To convert
+    # the graph to a readable format, you use a terminal and type
+    # $ dot -Tpng graph.dot -o graph.png
+    # you can also can use pdf, tiff, etc.
     graph_data = tree.export_graphviz(classifier,
                                       out_file="graph.dot",
                                       feature_names=feature_names,
