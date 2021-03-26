@@ -1,0 +1,22 @@
+##### Info of manage_data files:
+
+(a) list_unnecessary_columns.txt: 
+1. RespId - We do not need the id of a person as a feature.
+2. weight - as of now we are not considering it
+
+3. Q1 - "Are you a U.S. citizen?"
+   Reason for removing: The answer is always 1 as all of the respondants recorded in the data are US citizens.
+   
+4. Q22 - "You previously indicated that you are not currently registered to vote. Which of the following reasons best describes why you are not currently registered to vote?"
+   Reason for removing: This question is applicable to very few people and hence does not add any value to the analysis, also it's answer is based on question 20. This might be reconsidered.
+
+5. Q26 - "Most eligible citizens don’t vote in every national election (the November general elections). In general, which of the following categories do you think best describes you?"
+   Reason for removing: It is basically asking the respondants directly which category they belong to. Some analysis shows that this feature is very much correlated with the labels for this study. Probably it is better to remove this question as we do not plan to derive the category of the voter by just asking them.
+
+6. Q28_8 - "Thinking back to the last few national elections that you voted in, which of the following were the most important reasons in your decision to vote? Please choose all that apply." - Option 8 : "Other [Specify][A]"
+   Reason for removing: This option looks highly correlated to the label however it does not give any concrete information.
+
+7. Q29 - "Thinking back to the last few national elections where you decided not to vote, which of the following were the most important reasons in your decision not to vote? Please choose all that apply."
+   Reason for removing: Too many NA values.
+
+8. Q31, Q32, Q33 - Again too many NAs

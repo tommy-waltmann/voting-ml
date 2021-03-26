@@ -15,12 +15,15 @@ class PollDataProxy:
             to the questions.
     """
 
-    def __init__(self, remove_nan=False):
+    def __init__(self, remove_nan=False, convert_to_int=False):
         self._remove_nan = remove_nan
+        self._convert_to_int = convert_to_int
         self._dataframe = pd.read_csv(
             "../extern/fivethirtyeight_data/non-voters/nonvoters_data.csv"
         )
-
+        self._data = self._dataframe.values
+        self._list_all_question = self.questions()
+        self._total_questions = len(self.questions())
         # mapping the questions that have string answers to their keys
         self._string_int_mapping = {
             'race': {'White': 0, 'Black': 1, 'Other/Mixed': 2, 'Hispanic': 3},
@@ -33,6 +36,27 @@ class PollDataProxy:
         # columns with string answers
         self._cols_with_string_answers = list(self._string_int_mapping.keys())
 
+    def categorize_age(self, age_array):
+        """
+        This function is to categorize the ages of the respondants into different categories: '25-','26-34','35-49','50-64','65+'.
+        """
+
+        ages = age_array.astype(str)
+        age_categories = [None]*ages.shape[0]
+        for i in range(ages.shape[0]):
+            if(int(ages[i])<=25):
+                age_categories[i]='25-'
+            elif(int(ages[i])>=26 and int(ages[i])<=34):
+                age_categories[i]='26-34'
+            elif(int(ages[i])>=35 and int(ages[i])<=49):
+                age_categories[i]='35-49'
+            elif(int(ages[i])>=50 and int(ages[i])<=64):
+                age_categories[i]='50-64'
+            else:
+                age_categories[i]='65+'
+
+        return np.array(age_categories)
+        
     def all_data(self, question_list=None):
         """
         Get all the responses for the specified poll questions.
@@ -48,7 +72,12 @@ class PollDataProxy:
         if question_list is None:
             question_list = self.questions()
 
-        return_table = np.zeros((self._dataframe.shape[0], len(question_list)))
+        return_table = None
+        if(self._convert_to_int):
+            return_table = np.zeros((self._dataframe.shape[0], len(question_list)))
+        else:
+            return_table = np.empty(self._dataframe.shape[0]*len(question_list), dtype=object)
+            return_table = return_table.reshape((self._dataframe.shape[0], len(question_list)))
         for i, question in enumerate(question_list):
             # get column index, throw exception if question is not valid
             try:
@@ -58,16 +87,46 @@ class PollDataProxy:
 
             # get the data from the table and add it to the result
             if question in self._cols_with_string_answers:
-                return_table[:, i] = self._answers_as_ints(answers, question)
+                if(self._convert_to_int):
+                    return_table[:, i] = self._answers_as_ints(answers, question)
+                else:
+                    return_table[:, i] = answers
+            elif(question=='ppage'):
+                return_table[:, i] = self.categorize_age(np.array(answers))
             else:
                 return_table[:, i] = answers
 
         # remove all rows with a nan value in them
         if self._remove_nan:
+            #if(self._convert_to_int):
             return_table = return_table[~np.isnan(return_table).any(axis=1)]
 
-        return return_table
+        return return_table, question_list
 
+    def all_data_except(self, question_list_to_remove=None):
+
+        """
+        Get all the responses for the specified poll questions.
+        Args:   
+         question_list_to_remove (list(str)):
+                A list of questions to 'NOT' get the response data for, defaults to 
+                zero questions.                                                             
+        Returns (np.ndarray(N_answers, N_questions)):
+            All of the answers for the questions in the poll except the ones specified in the argument.
+        """
+        
+        if question_list_to_remove is None:
+            question_list_to_remove = []
+
+        #print("question_list_to_remove",question_list_to_remove)
+            
+        #final_questions = list(set(self._list_all_question) - set(question_list_to_remove))
+        final_questions = [x for x in self._list_all_question if x not in question_list_to_remove]
+        #print("final_questions",final_questions)
+        return_table, questions = self.all_data(final_questions)
+
+        return return_table, questions
+        
     def questions(self):
         """
         Get a list of all the questions in the poll.
@@ -101,7 +160,10 @@ class PollDataProxy:
         # get the answers to the question as int
         question_answers = self._dataframe[column_name]
         if column_name in self._cols_with_string_answers:
-            result = self._answers_as_ints(question_answers, column_name)
+            if(self._convert_to_int):
+                result = self._answers_as_ints(question_answers, column_name)
+            else:
+                result = np.array(question_answers)
         elif column_name in cols:
             result = np.array(question_answers)
         else:
@@ -112,3 +174,4 @@ class PollDataProxy:
             result = result[np.logical_not(np.isnan(result))]
 
         return result
+
