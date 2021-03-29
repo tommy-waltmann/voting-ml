@@ -153,8 +153,6 @@ class FeatureSelection:
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
 
-        X_org = 
-        
         return data_selft, selft_question
 
     def ft_corr(self, data, questions):
