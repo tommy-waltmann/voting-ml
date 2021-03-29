@@ -175,7 +175,7 @@ class FeatureSelection:
         plt.clf()
         return df_corr
     
-    def ftsel_indp(self, data, ):
+    #def ftsel_indp(self, data, ):
         
         
         
