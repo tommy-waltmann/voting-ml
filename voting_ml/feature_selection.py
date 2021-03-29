@@ -10,6 +10,7 @@ from sklearn.preprocessing import OrdinalEncoder
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 class FeatureSelection:
     ''' This class provides several methods to select features from the given data.
@@ -62,18 +63,45 @@ class FeatureSelection:
             self._ftsel_data, self._ftsel_quelist = self._poll_data.all_data_except(self._list_unnecess_que)
 
         print("self._ftsel_data",self._ftsel_data.shape)
+
+    def get_ftsel_original_data(self):
+
+        return self._ftsel_data
+    
+    def split_data(self, X, y, input_test_size=0, input_random_state=None):
+
+        data_dict = {}
+        if(input_test_size==0):
+            data_dict["X_train"] = X
+            data_dict["X_test"] = None
+            data_dict["y_train"] = y
+            data_dict["y_test"] = None
+        else:
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=input_test_size, random_state=input_random_state)
+            data_dict["X_train"] = X_train
+            data_dict["X_test"] = X_test
+            data_dict["y_train"] = y_train
+            data_dict["y_test"] = y_test
+
+        return data_dict
             
-    def ftsel_chi2(self, KBest = 'all', label=None):
+    def ftsel_chi2(self, data, KBest = 'all', label=None, input_test_size=0, input_random_state=None):
         
-        X, y = self.separate_ft_label(self._ftsel_data)
+        X, y = self.separate_ft_label(data,label)
         N = X.shape[0]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1)
+
+        data_dict = self.split_data(X, y, input_test_size, input_random_state)
+
+        X_train = data_dict["X_train"]
+        X_test = data_dict["X_test"]
+        y_train = data_dict["y_train"]
+        y_test = data_dict["y_test"]
         
         # prepare input data
-        X_train_enc, X_test_enc = self.prepare_inputs(X_train, X_test)
+        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
         
         # prepare output data
-        y_train_enc, y_test_enc = self.prepare_targets(y_train, y_test)
+        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
         
         # feature selection
         X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, KBest)
@@ -82,10 +110,12 @@ class FeatureSelection:
         ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
         ft_num = ft_num.astype(int)
         fs_scores = fs.scores_.reshape(len(fs.scores_),1)
+        fs_p_values = fs.pvalues_.reshape(len(fs.scores_),1)
         fs_ft_scores = np.concatenate((ft_num,fs_scores),axis=1)
-        fs_ft_scores_sort = np.sort(fs_ft_scores.view('i8,i8'), order=['f1'], axis=0).view(np.float)[::-1]
+        fs_ft_sc_pv = np.concatenate((fs_ft_scores,fs_p_values),axis=1)
+        fs_ft_scores_sort = np.sort(fs_ft_sc_pv.view('i8,i8,i8'), order=['f1'], axis=0).view(np.float)[::-1]
         for i in range(1,len(fs.scores_)+1,1):
-            print('Feature %d - %d: %f' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1]))
+            print('Feature %d - %d: %f and p-value: %f' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1], fs_ft_scores_sort[i-1][2]))
 
         #Creating directory for the output
         if(not os.path.isdir("../output/"+self._run_name)):
@@ -123,8 +153,32 @@ class FeatureSelection:
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
 
-        return data_selft, selft_question        
+        X_org = 
+        
+        return data_selft, selft_question
 
+    def ft_corr(self, data, questions):
+        KBest = len(questions)
+        X = data[:, :-1]
+        df = pd.DataFrame(X, columns = questions)
+        le=LabelEncoder()
+        for column in df.columns:
+            df[column] = le.fit_transform(df[column])
+        df_corr = df.corr(method='pearson')
+
+        plt.figure(figsize=(15,15))
+        sns.heatmap(df_corr,linewidths=.1,cmap="YlGnBu", annot=True)
+        plt.yticks(rotation=0)
+        #plt.show()
+        image_name = "../output/"+self._run_name+"/"+"ft_corr_KBest_"+str(KBest)+".png"
+        plt.savefig(image_name)
+        plt.clf()
+        return df_corr
+    
+    def ftsel_indp(self, data, ):
+        
+        
+        
     def separate_ft_label(self, dataset, label=None):
         X = None
         y = None
@@ -142,21 +196,27 @@ class FeatureSelection:
         oe = OrdinalEncoder()
         oe.fit(X_train)
         X_train_enc = oe.transform(X_train)
-        X_test_enc = oe.transform(X_test)
-        return X_train_enc, X_test_enc
+        X_test_enc = None
+        if(X_test!=None):
+            X_test_enc = oe.transform(X_test)
+        return X_train_enc, X_test_enc, oe
 
     def prepare_targets(self, y_train, y_test):
         le = LabelEncoder()
         le.fit(y_train)
         y_train_enc = le.transform(y_train)
-        y_test_enc = le.transform(y_test)
-        return y_train_enc, y_test_enc
+        y_test_enc = None
+        if(y_test!=None):
+            y_test_enc = le.transform(y_test)
+        return y_train_enc, y_test_enc, le
 
     def ftsel_KBest(self, X_train, y_train, X_test, K):
         fs = SelectKBest(score_func=chi2, k=K)
         fs.fit(X_train, y_train)
         X_train_fs = fs.transform(X_train)
-        X_test_fs = fs.transform(X_test)
+        X_test_fs = None
+        if(X_test!=None):
+            X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
     
     
