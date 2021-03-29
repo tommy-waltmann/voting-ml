@@ -6,7 +6,7 @@ def main():
 
     dataset = ftsel.get_ftsel_original_data()
     
-    data_ftsel, ftsel_questions = ftsel.ftsel_chi2(KBest = 20)
+    data_ftsel, ftsel_questions = ftsel.ftsel_chi2(dataset,KBest = 20)
 
     print("data_ftsel",data_ftsel)
     print("ftsel_questions",ftsel_questions)
