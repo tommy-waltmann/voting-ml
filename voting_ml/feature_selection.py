@@ -20,10 +20,6 @@ class FeatureSelection:
 
     def __init__(self, necess_que_file, unnecess_que_file, bool_necess_que=False, run_name="test"):
         
-        self._dataframe = pd.read_csv(
-            "../extern/fivethirtyeight_data/non-voters/nonvoters_data.csv"
-        )
-        
         self._bool_necess_que = bool_necess_que
         self._run_name = run_name
         self._list_unnecess_que = None
