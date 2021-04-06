@@ -6,7 +6,7 @@ def main():
     poll_data = data.PollDataProxy()
 
     print(poll_data._dataframe.values.shape)
-    
+
     # access answers to questions as numpy arrays
     print(poll_data.Q1)
     print(poll_data.Q22)  # this questions is almost all nan's
@@ -23,7 +23,7 @@ def main():
     print(questions)
 
     # get all the response data at once (shape is (N_responses, N_questions))
-    all_answers = poll_data.all_data()
+    all_answers, all_questions = poll_data.all_data()
     print(all_answers.shape)
 
     # get all the response data at once (shape is (N_responses, N_questions_in_list))

@@ -29,7 +29,8 @@ class PollDataProxy:
             'income_cat': {'Less than $40k': 0, '$40-75k': 1, '$75-125k': 2, '$125k or more': 3},
             'gender': {'Female': 0, 'Male': 1},
             'voter_category': {'rarely/never': 0, 'sporadic': 1, 'always': 2},
-            'educ': {'High school or less': 0, 'Some college': 1, 'College': 2}
+            'educ': {'High school or less': 0, 'Some college': 1, 'College': 2},
+            'ppage': {'25-': 0, '26-34': 1, '35-49': 2, '50-64': 3, '65+': 4}
         }
 
         # columns with string answers
@@ -55,7 +56,7 @@ class PollDataProxy:
                 age_categories[i]='65+'
 
         return np.array(age_categories)
-        
+
     def all_data(self, question_list=None):
         """
         Get all the responses for the specified poll questions.
@@ -76,6 +77,7 @@ class PollDataProxy:
             return_table = np.zeros((self._dataframe.shape[0], len(question_list)))
         else:
             return_table = np.empty((self._dataframe.shape[0], len(question_list)), dtype=object)
+
         for i, question in enumerate(question_list):
             # get column index, throw exception if question is not valid
             try:
@@ -85,34 +87,33 @@ class PollDataProxy:
 
             # get the data from the table and add it to the result
             if question in self._cols_with_string_answers:
-                if(self._convert_to_int):
+                if question == 'ppage':
+                    return_table[:, i] = self._answers_as_ints(self.categorize_age(answers), question)
+                elif self._convert_to_int:
                     return_table[:, i] = self._answers_as_ints(answers, question)
                 else:
                     return_table[:, i] = answers
-            elif(question=='ppage'):
-                return_table[:, i] = self.categorize_age(np.array(answers))
             else:
                 return_table[:, i] = answers
 
+
         # remove all rows with a nan value in them
         if self._remove_nan:
-            if(self._convert_to_int):
-                return_table = return_table[~np.isnan(return_table).any(axis=1)]
+            return_table = return_table[~np.isnan(return_table).any(axis=1)]
 
         return return_table, question_list
 
     def all_data_except(self, question_list_to_remove=None):
-
         """
         Get all the responses for the specified poll questions.
-        Args:   
-         question_list_to_remove (list(str)):
-                A list of questions to 'NOT' get the response data for, defaults to 
-                zero questions.                                                             
+        Args:
+            question_list_to_remove (list(str)):
+                A list of questions to 'NOT' get the response data for, defaults to
+                zero questions.
         Returns (np.ndarray(N_answers, N_questions)):
             All of the answers for the questions in the poll except the ones specified in the argument.
         """
-        
+
         if question_list_to_remove is None:
             question_list_to_remove = []
 
@@ -120,7 +121,7 @@ class PollDataProxy:
         return_table, questions = self.all_data(final_questions)
 
         return return_table, questions
-        
+
     def questions(self):
         """
         Get a list of all the questions in the poll.
