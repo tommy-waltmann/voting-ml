@@ -3,6 +3,15 @@ import numpy as np
 import sklearn
 from sklearn import model_selection, tree
 
+
+def ordered_difference(list1, list2):
+    out_list = []
+    for elt in list1:
+        if elt not in list2:
+            out_list.append(elt)
+    return out_list
+
+
 def main():
     # grab data
     poll_data = data.PollDataProxy(remove_nan=True, convert_to_int=True)
@@ -45,6 +54,18 @@ def main():
     pred_train_y = clf.predict(train_x)
     train_acc = sklearn.metrics.accuracy_score(pred_train_y, train_y)
     print("Train Accuracy: {}".format(train_acc))
+
+    # write the graph data to a dot file
+    # $ dot -Tpng graph.dot -o graph.png
+    feature_names = ordered_difference(all_questions, ['voter_category'])
+    class_names = ['rarely/never', 'sporadic', 'always']
+    graph_data = tree.export_graphviz(clf,
+                                      out_file="graph.dot",
+                                      feature_names=feature_names,
+                                      class_names=class_names,
+                                      filled=True,
+                                      rounded=True,
+                                      special_characters=True)
 
 
 if __name__ == "__main__":
