@@ -2,3 +2,4 @@
 *.dot
 *.png
 ./output/*/
+./voting-ml/__pycache__/
