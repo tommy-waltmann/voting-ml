@@ -12,7 +12,10 @@ class PollDataProxy:
     Args:
         remove_nan (bool):
             Whether values returned by this instance should include empty answers
-            to the questions.
+            to the questions, defaults to False.
+        convert_to_int (bool):
+            Whether values returned by this instance should convert string answers
+            to the value of their integer mapping, defaults to False.
     """
 
     def __init__(self, remove_nan=False, convert_to_int=False):
@@ -72,11 +75,8 @@ class PollDataProxy:
         if question_list is None:
             question_list = self.questions()
 
-        return_table = None
-        if(self._convert_to_int):
-            return_table = np.zeros((self._dataframe.shape[0], len(question_list)))
-        else:
-            return_table = np.empty((self._dataframe.shape[0], len(question_list)), dtype=object)
+        dtype = np.int32 if self._convert_to_int else object
+        return_table = np.zeros((self._dataframe.shape[0], len(question_list)), dtype=dtype)
 
         for i, question in enumerate(question_list):
             # get column index, throw exception if question is not valid
@@ -85,22 +85,22 @@ class PollDataProxy:
             except KeyError:
                 raise KeyError("{} is not a valid question in the poll".format(question))
 
+            # categorize columns that need to be categorized
+            if question == 'ppage':
+                answers = self.categorize_age(answers)
+
             # get the data from the table and add it to the result
-            if question in self._cols_with_string_answers:
-                if question == 'ppage':
-                    return_table[:, i] = self._answers_as_ints(self.categorize_age(answers), question)
-                elif self._convert_to_int:
-                    return_table[:, i] = self._answers_as_ints(answers, question)
-                else:
-                    return_table[:, i] = answers
+            if question in self._cols_with_string_answers and self._convert_to_int:
+                return_table[:, i] = self._answers_as_ints(answers, questions)
             else:
                 return_table[:, i] = answers
 
-
         # remove all rows with a nan value in them
         if self._remove_nan:
-            return_table = return_table[~np.isnan(return_table).any(axis=1)]
-
+            if self._convert_to_int:
+                return_table = return_table[~np.isnan(return_table).any(axis=1)]
+            else:
+                print("Warning: cannot remove nans from data which are not all ints")
         return return_table, question_list
 
     def all_data_except(self, question_list_to_remove=None):
