@@ -1,4 +1,4 @@
-# Adapted from https://machinelearningmastery.com/feature-selection-with-categorical-data/#:~:text=The%20two%20most%20commonly%20used,and%20the%20mutual%20information%20statistic.  
+# Adapted from https://machinelearningmastery.com/feature-selection-with-categorical-data/#:~:text=The%20two%20most%20commonly%20used,and%20the%20mutual%20information%20statistic.
 import numpy as np
 import pandas as pd
 import os
@@ -19,7 +19,7 @@ class FeatureSelection:
     '''
 
     def __init__(self, necess_que_file, unnecess_que_file, bool_necess_que=False, run_name="test"):
-        
+
         self._bool_necess_que = bool_necess_que
         self._run_name = run_name
         self._list_unnecess_que = None
@@ -28,7 +28,7 @@ class FeatureSelection:
         self._ftsel_quelist = None
         self._list_unnecess_que = []
         self._list_necess_que = []
-        
+
         if(not self._bool_necess_que):
             self._unnecess_que_file = open(unnecess_que_file,"r")
             nonempty_lines_unnecess = [line.strip("\n") for line in self._unnecess_que_file if not line.isspace()]
@@ -50,7 +50,7 @@ class FeatureSelection:
                     self._list_necess_que = nonempty_lines_necess[0].split(",")
                 except KeyError:
                     raise KeyError("The line containing necessary questions cannot be split to get a list of questions. Please make sure the questions in the file are separated by comma.")
-        
+
         self._poll_data = data.PollDataProxy(remove_nan=False, convert_to_int=False)
 
         if(self._bool_necess_que):
@@ -63,7 +63,7 @@ class FeatureSelection:
     def get_ftsel_original_data(self):
 
         return self._ftsel_data
-    
+
     def split_data(self, X, y, input_test_size=0, input_random_state=None):
 
         data_dict = {}
@@ -80,9 +80,9 @@ class FeatureSelection:
             data_dict["y_test"] = y_test
 
         return data_dict
-            
+
     def ftsel_chi2(self, data, KBest = 'all', label=None, input_test_size=0, input_random_state=None):
-        
+
         X, y = self.separate_ft_label(data,label)
         N = X.shape[0]
 
@@ -92,16 +92,16 @@ class FeatureSelection:
         X_test = data_dict["X_test"]
         y_train = data_dict["y_train"]
         y_test = data_dict["y_test"]
-        
+
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
-        
+
         # prepare output data
         y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
-        
+
         # feature selection
         X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, KBest)
-        
+
         # what are scores for the features
         ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
         ft_num = ft_num.astype(int)
@@ -115,8 +115,8 @@ class FeatureSelection:
 
         #Creating directory for the output
         if(not os.path.isdir("../output/"+self._run_name)):
-            os.mkdir("../output/"+self._run_name)
-        
+            os.makedirs(os.path.join("../output/", self._run_name))
+
         # plot the scores
         plt.bar([i for i in range(len(fs.scores_))], fs.scores_)
         image = "../output/"+self._run_name+"/"+"scores_versus_features_barplot.png"
@@ -137,11 +137,11 @@ class FeatureSelection:
         data_selft = data_selft.reshape((N,KBest+1))
 
         selft_question = [None] * KBest
-        
+
         for k in range(KBest):
             data_selft[:,k] = self._ftsel_data[:,int(fs_ft_scores_sort[k][0])]
             selft_question[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
-            
+
         data_selft[:,KBest] = y
 
         str_questions = ",".join(selft_question)
@@ -168,11 +168,11 @@ class FeatureSelection:
         plt.savefig(image_name)
         plt.clf()
         return df_corr
-    
+
     #def ftsel_indp(self, data, ):
-        
-        
-        
+
+
+
     def separate_ft_label(self, dataset, label=None):
         X = None
         y = None
@@ -185,7 +185,7 @@ class FeatureSelection:
 
         X = X.astype(str)
         return X, y
-            
+
     def prepare_inputs(self, X_train, X_test):
         oe = OrdinalEncoder()
         oe.fit(X_train)
@@ -212,7 +212,7 @@ class FeatureSelection:
         if(X_test!=None):
             X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
-    
-    
 
-        
+
+
+
