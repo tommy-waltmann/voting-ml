@@ -1,5 +1,5 @@
 *.pdf
 *.dot
 *.png
-./output/*/
-./voting-ml/__pycache__/
+output
+__pycache__
