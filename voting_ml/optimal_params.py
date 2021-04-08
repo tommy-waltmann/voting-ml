@@ -16,7 +16,12 @@ def ordered_difference(list1, list2):
 
 def main():
     # get kbest features
-    ftsel = feature_selection.FeatureSelection(necess_que_file="../extern/manage_data/list_all_questions.txt", unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt", bool_necess_que=False, run_name="test/")
+    ftsel = feature_selection.FeatureSelection(
+        necess_que_file="../extern/manage_data/list_all_questions.txt",
+        unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+        bool_necess_que=False,
+        run_name="test/"
+    )
     dataset = ftsel.get_ftsel_original_data()
     _, ftsel_questions = ftsel.ftsel_chi2(dataset,KBest = 20)
 
