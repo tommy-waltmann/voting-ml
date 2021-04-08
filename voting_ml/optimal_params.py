@@ -1,7 +1,9 @@
-import data
 import numpy as np
 import sklearn
 from sklearn import model_selection, tree
+
+import data
+import feature_selection
 
 
 def ordered_difference(list1, list2):
@@ -13,9 +15,14 @@ def ordered_difference(list1, list2):
 
 
 def main():
+    # get kbest features
+    ftsel = feature_selection.FeatureSelection(necess_que_file="../extern/manage_data/list_all_questions.txt", unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt", bool_necess_que=False, run_name="test/")
+    dataset = ftsel.get_ftsel_original_data()
+    _, ftsel_questions = ftsel.ftsel_chi2(dataset,KBest = 20)
+
     # grab data
     poll_data = data.PollDataProxy(remove_nan=True, convert_to_int=True)
-    all_data, all_questions = poll_data.all_data(['Q16', 'Q20', 'voter_category'])
+    all_data, _ = poll_data.all_data(ftsel_questions + ['voter_category'])
     np.random.shuffle(all_data)
     print("Number of Samples:", len(all_data))
 
@@ -57,11 +64,11 @@ def main():
 
     # write the graph data to a dot file
     # $ dot -Tpng graph.dot -o graph.png
-    feature_names = ordered_difference(all_questions, ['voter_category'])
+    #eature_names = ordered_difference(all_questions, ['voter_category'])
     class_names = ['rarely/never', 'sporadic', 'always']
     graph_data = tree.export_graphviz(clf,
                                       out_file="graph.dot",
-                                      feature_names=feature_names,
+                                      feature_names=ftsel_questions,
                                       class_names=class_names,
                                       filled=True,
                                       rounded=True,
