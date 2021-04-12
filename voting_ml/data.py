@@ -21,7 +21,6 @@ class PollDataProxy:
         self._dataframe = pd.read_csv(
             "../extern/fivethirtyeight_data/non-voters/nonvoters_data.csv"
         )
-        self._data = self._dataframe.values
         self._list_all_question = self.questions()
         self._total_questions = len(self.questions())
         # mapping the questions that have string answers to their keys
@@ -76,8 +75,7 @@ class PollDataProxy:
         if(self._convert_to_int):
             return_table = np.zeros((self._dataframe.shape[0], len(question_list)))
         else:
-            return_table = np.empty(self._dataframe.shape[0]*len(question_list), dtype=object)
-            return_table = return_table.reshape((self._dataframe.shape[0], len(question_list)))
+            return_table = np.empty((self._dataframe.shape[0], len(question_list)), dtype=object)
         for i, question in enumerate(question_list):
             # get column index, throw exception if question is not valid
             try:
@@ -98,8 +96,8 @@ class PollDataProxy:
 
         # remove all rows with a nan value in them
         if self._remove_nan:
-            #if(self._convert_to_int):
-            return_table = return_table[~np.isnan(return_table).any(axis=1)]
+            if(self._convert_to_int):
+                return_table = return_table[~np.isnan(return_table).any(axis=1)]
 
         return return_table, question_list
 
@@ -118,11 +116,7 @@ class PollDataProxy:
         if question_list_to_remove is None:
             question_list_to_remove = []
 
-        #print("question_list_to_remove",question_list_to_remove)
-            
-        #final_questions = list(set(self._list_all_question) - set(question_list_to_remove))
         final_questions = [x for x in self._list_all_question if x not in question_list_to_remove]
-        #print("final_questions",final_questions)
         return_table, questions = self.all_data(final_questions)
 
         return return_table, questions
