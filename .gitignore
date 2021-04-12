@@ -1,3 +1,4 @@
 *.pdf
 *.dot
 *.png
+./voting_ml/__pycache__
