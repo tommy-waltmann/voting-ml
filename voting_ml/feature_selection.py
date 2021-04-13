@@ -84,7 +84,6 @@ class FeatureSelection:
             
     def ftsel_chi2(self, data_dict, KBest = 'all'):
         
-        data = data_dict["data"].astype(str)
         X_train = data_dict["X_train"].astype(str)
         X_test = data_dict["X_test"].astype(str)
         y_train = data_dict["y_train"].astype(str)
@@ -144,7 +143,6 @@ class FeatureSelection:
             ftsel_questions[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
             
         ftsel_data_dict = {
-            'data': data,
             'X_train': ftsel_X_train,
             'X_test': ftsel_X_test,
             'y_train': y_train,
@@ -160,7 +158,6 @@ class FeatureSelection:
     
     def ftsel_mutlinfo(self, data_dict, KBest = 'all'):
  
-        data = data_dict["data"].astype(str)
         X_train = data_dict["X_train"].astype(str)
         X_test = data_dict["X_test"].astype(str)
         y_train = data_dict["y_train"].astype(str)
@@ -218,7 +215,6 @@ class FeatureSelection:
             ftsel_questions[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
 
         ftsel_data_dict = {
-            'data': data,
             'X_train': ftsel_X_train,
             'X_test': ftsel_X_test,
             'y_train': y_train,
@@ -294,14 +290,20 @@ class FeatureSelection:
         pca_X_test = np.dot(X_test_enc,transform_matrix)
 
         pca_data_dict = {
-            'data': pca_data,
             'X_train': pca_X_train[:,0:KBest],
             'X_test': pca_X_test[:,0:KBest],
             'y_train': y_train,
             'y_test': y_test
         }
+
+        pca_components_dict = {
+            'transform_matrix': transform_matrix,
+            'eigen_vals': eigen_vals,
+            'KBest': KBest,
+            'total_var': total_var
+        }
         
-        return pca_data_dict, transform_matrix, eigen_vals
+        return pca_data_dict, pca_components_dict
     
     def ft_corr(self, X_train, questions):
         if(questions==None):

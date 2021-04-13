@@ -57,7 +57,7 @@ def main():
         'y_test': y_test
     }
     
-    pca_data_dict, transform_matrix, eigen_vals = pca_ftsel.ftsel_pca(pca_data_dict,KBest=20)
+    pca_data_dict, pca_comp_dict = pca_ftsel.ftsel_pca(pca_data_dict,KBest=20)
     pca_df = pca_ftsel.ft_corr(pca_data_dict["X_train"], questions=None)
     print(pca_df) 
     
