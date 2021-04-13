@@ -230,7 +230,6 @@ class FeatureSelection:
 
     def ftsel_pca(self, data_dict, KBest=20):
 
-        data = data_dict["data"].astype(str)
         X_train = data_dict["X_train"].astype(str)
         X_test = data_dict["X_test"].astype(str)
         y_train = data_dict["y_train"].astype(str)
