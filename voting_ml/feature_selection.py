@@ -8,9 +8,10 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import chi2
+from sklearn.feature_selection import chi2,mutual_info_classif
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.decomposition import PCA
 
 class FeatureSelection:
     ''' This class provides several methods to select features from the given data.
@@ -81,17 +82,15 @@ class FeatureSelection:
 
         return data_dict
 
-    def ftsel_chi2(self, data, KBest = 'all', label=None, input_test_size=0, input_random_state=None):
+    def ftsel_chi2(self, data_dict, KBest = 'all'):
 
-        X, y = self.separate_ft_label(data,label)
-        N = X.shape[0]
+        X_train = data_dict["X_train"].astype(str)
+        X_test = data_dict["X_test"].astype(str)
+        y_train = data_dict["y_train"].astype(str)
+        y_test = data_dict["y_test"].astype(str)
 
-        data_dict = self.split_data(X, y, input_test_size, input_random_state)
-
-        X_train = data_dict["X_train"]
-        X_test = data_dict["X_test"]
-        y_train = data_dict["y_train"]
-        y_test = data_dict["y_test"]
+        N_train = X_train.shape[0]
+        N_test = X_test.shape[0]
 
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
@@ -100,7 +99,7 @@ class FeatureSelection:
         y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
         # feature selection
-        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, KBest)
+        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, KBest, score_fn=chi2)
 
         # what are scores for the features
         ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
@@ -111,15 +110,15 @@ class FeatureSelection:
         fs_ft_sc_pv = np.concatenate((fs_ft_scores,fs_p_values),axis=1)
         fs_ft_scores_sort = np.sort(fs_ft_sc_pv.view('i8,i8,i8'), order=['f1'], axis=0).view(np.float)[::-1]
         for i in range(1,len(fs.scores_)+1,1):
-            print('Feature %d - %d: %f and p-value: %f' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1], fs_ft_scores_sort[i-1][2]))
+            print('Chi2 - Feature %d - %d: %f and p-value: %f' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1], fs_ft_scores_sort[i-1][2]))
 
         #Creating directory for the output
         if(not os.path.isdir("../output/"+self._run_name)):
-            os.makedirs(os.path.join("../output/", self._run_name))
+            os.mkdir("../output/"+self._run_name)
 
         # plot the scores
         plt.bar([i for i in range(len(fs.scores_))], fs.scores_)
-        image = "../output/"+self._run_name+"/"+"scores_versus_features_barplot.png"
+        image = "../output/"+self._run_name+"/"+"chi2_scores_versus_features_barplot.png"
         plt.savefig(image)
         plt.clf()
 
@@ -128,33 +127,190 @@ class FeatureSelection:
         plt.xlabel('feature rank')
         plt.ylabel('score')
         plt.legend()
-        image_name = "../output/"+self._run_name+"/"+"score_versus_feature_rank_ftsel_data.png"
+        image_name = "../output/"+self._run_name+"/"+"chi2_score_versus_feature_rank_ftsel_data.png"
         plt.savefig(image_name)
         plt.clf()
 
         #Returning selected features and labels
-        data_selft = np.empty(N*(KBest+1), dtype=object)
-        data_selft = data_selft.reshape((N,KBest+1))
+        ftsel_X_train = np.empty( (N_train,(KBest)), dtype=object)
+        ftsel_X_test = np.empty( (N_test,(KBest)), dtype=object)
 
-        selft_question = [None] * KBest
+        ftsel_questions = [None] * KBest
 
         for k in range(KBest):
-            data_selft[:,k] = self._ftsel_data[:,int(fs_ft_scores_sort[k][0])]
-            selft_question[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
+            ftsel_X_train[:,k] = X_train[:,int(fs_ft_scores_sort[k][0])]
+            ftsel_X_test[:,k] = X_test[:,int(fs_ft_scores_sort[k][0])]
+            ftsel_questions[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
 
-        data_selft[:,KBest] = y
+        ftsel_data_dict = {
+            'X_train': ftsel_X_train,
+            'X_test': ftsel_X_test,
+            'y_train': y_train,
+            'y_test': y_test
+        }
 
-        str_questions = ",".join(selft_question)
-        o_ftsel_que_file = open("../output/"+self._run_name+"/"+"ftsel_questions_list.txt","w")
+        str_questions = ",".join(ftsel_questions)
+        o_ftsel_que_file = open("../output/"+self._run_name+"/"+"chi2_ftsel_questions_list.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
 
-        return data_selft, selft_question
+        return ftsel_data_dict, ftsel_questions
 
-    def ft_corr(self, data, questions):
+    def ftsel_mutlinfo(self, data_dict, KBest = 'all'):
+
+        X_train = data_dict["X_train"].astype(str)
+        X_test = data_dict["X_test"].astype(str)
+        y_train = data_dict["y_train"].astype(str)
+        y_test = data_dict["y_test"].astype(str)
+
+        N_train = X_train.shape[0]
+        N_test = X_test.shape[0]
+
+        # prepare input data
+        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+
+        # prepare output data
+        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+
+        # feature selection
+        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, KBest, score_fn=mutual_info_classif)
+
+        # what are scores for the features
+        ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
+        ft_num = ft_num.astype(int)
+        fs_scores = fs.scores_.reshape(len(fs.scores_),1)
+        fs_ft_scores = np.concatenate((ft_num,fs_scores),axis=1)
+        fs_ft_scores_sort = np.sort(fs_ft_scores.view('i8,i8'), order=['f1'], axis=0).view(np.float)[::-1]
+        for i in range(1,len(fs.scores_)+1,1):
+            print('Feature %d - %d: %f ' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1]))
+
+        #Creating directory for the output
+        if(not os.path.isdir("../output/"+self._run_name)):
+            os.makedirs(os.path.join("../output/", self._run_name))
+
+        # plot the scores
+        plt.bar([i for i in range(len(fs.scores_))], fs.scores_)
+        image = "../output/"+self._run_name+"/"+"mutlinfo_scores_versus_features_barplot.png"
+        plt.savefig(image)
+        plt.clf()
+
+        # Plot scores
+        plt.plot(ft_num,fs_ft_scores_sort[:,1], label = "score versus feature rank")
+        plt.xlabel('feature rank')
+        plt.ylabel('score')
+        plt.legend()
+        image_name = "../output/"+self._run_name+"/"+"mutlinfo_score_versus_feature_rank_ftsel_data.png"
+        plt.savefig(image_name)
+        plt.clf()
+
+        #Returning selected features and labels
+        ftsel_X_train = np.empty( (N_train,(KBest)), dtype=object)
+        ftsel_X_test = np.empty( (N_test,(KBest)), dtype=object)
+
+        ftsel_questions = [None] * KBest
+
+        for k in range(KBest):
+            ftsel_X_train[:,k] = X_train[:,int(fs_ft_scores_sort[k][0])]
+            ftsel_X_test[:,k] = X_test[:,int(fs_ft_scores_sort[k][0])]
+            ftsel_questions[k] = self._ftsel_quelist[int(fs_ft_scores_sort[k][0])]
+
+        ftsel_data_dict = {
+            'X_train': ftsel_X_train,
+            'X_test': ftsel_X_test,
+            'y_train': y_train,
+            'y_test': y_test
+        }
+
+        str_questions = ",".join(ftsel_questions)
+        o_ftsel_que_file = open("../output/"+self._run_name+"/"+"mutlinfo_ftsel_questions_list.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
+
+        return ftsel_data_dict, ftsel_questions
+
+    def ftsel_pca(self, data_dict, KBest=20):
+
+        X_train = data_dict["X_train"].astype(str)
+        X_test = data_dict["X_test"].astype(str)
+        y_train = data_dict["y_train"].astype(str)
+        y_test = data_dict["y_test"].astype(str)
+
+        # prepare input data
+        print("X_train",X_train)
+        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+
+        # prepare output data
+        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+
+        pca = PCA()
+        pca.fit(X_train_enc)
+        transform_matrix = pca.components_.T
+        eigen_vals = pca.explained_variance_
+
+        #Creating directory for the output
+        if(not os.path.isdir("../output/"+self._run_name)):
+            os.mkdir("../output/"+self._run_name)
+
+        print("Eigen values for first 20 principal components: ",eigen_vals[0:20])
+        rank_eigenval = np.arange(1,X_train_enc.shape[1]+1).reshape((X_train_enc.shape[1]))
+        plt.plot(rank_eigenval,eigen_vals, label = "eigen-values")
+        plt.xlabel('Rank of the eigenvalue')
+        plt.ylabel('Eigen Value')
+        plt.yscale('log')
+        plt.title("PCA - eigenvalues")
+        plt.legend()
+        image_name = '../output/'+self._run_name+'/eigenvalues_vs_rank.png'
+        plt.savefig(image_name)
+        plt.clf()
+
+        total_var = np.zeros((eigen_vals.shape[0]))
+        total_sum = np.sum(eigen_vals)
+        for i in range(eigen_vals.shape[0]):
+            total_var[i] = np.sum(eigen_vals[0:i+1])*100/total_sum
+
+        num_95perVar = None
+        num_99perVar = None
+
+        for j in range(eigen_vals.shape[0]):
+            if(total_var[j]>=95):
+                num_95perVar = j+1
+                break
+
+        for k in range(eigen_vals.shape[0]):
+            if(total_var[k]>=99):
+                num_99perVar = k+1
+                break
+
+        print("Number of principal components needed to represent 95% of the total variance: ", num_95perVar)
+        print("Number of principal components needed to represent 99% of the total variance: ", num_99perVar)
+
+        pca_data = data
+        pca_X_train = np.dot(X_train_enc,transform_matrix)
+        pca_X_test = np.dot(X_test_enc,transform_matrix)
+
+        pca_data_dict = {
+            'X_train': pca_X_train[:,0:KBest],
+            'X_test': pca_X_test[:,0:KBest],
+            'y_train': y_train,
+            'y_test': y_test
+        }
+
+        pca_components_dict = {
+            'transform_matrix': transform_matrix,
+            'eigen_vals': eigen_vals,
+            'KBest': KBest,
+            'total_var': total_var
+        }
+
+        return pca_data_dict, pca_components_dict
+
+    def ft_corr(self, X_train, questions):
+        if(questions==None):
+            fts = X_train.shape[1]
+            questions_int = list(map(str, list(range(1,fts+1,1))))
+            questions = ["ft_"+x for x in questions_int]
         KBest = len(questions)
-        X = data[:, :-1]
-        df = pd.DataFrame(X, columns = questions)
+        df = pd.DataFrame(X_train, columns = questions)
         le=LabelEncoder()
         for column in df.columns:
             df[column] = le.fit_transform(df[column])
@@ -168,10 +324,6 @@ class FeatureSelection:
         plt.savefig(image_name)
         plt.clf()
         return df_corr
-
-    #def ftsel_indp(self, data, ):
-
-
 
     def separate_ft_label(self, dataset, label=None):
         X = None
@@ -190,29 +342,20 @@ class FeatureSelection:
         oe = OrdinalEncoder()
         oe.fit(X_train)
         X_train_enc = oe.transform(X_train)
-        X_test_enc = None
-        if(X_test!=None):
-            X_test_enc = oe.transform(X_test)
+        X_test_enc = oe.transform(X_test)
         return X_train_enc, X_test_enc, oe
 
     def prepare_targets(self, y_train, y_test):
         le = LabelEncoder()
         le.fit(y_train)
         y_train_enc = le.transform(y_train)
-        y_test_enc = None
-        if(y_test!=None):
-            y_test_enc = le.transform(y_test)
+        y_test_enc = le.transform(y_test)
         return y_train_enc, y_test_enc, le
 
-    def ftsel_KBest(self, X_train, y_train, X_test, K):
-        fs = SelectKBest(score_func=chi2, k=K)
+    def ftsel_KBest(self, X_train, y_train, X_test, K, score_fn=chi2):
+        fs = SelectKBest(score_func=score_fn, k=K)
         fs.fit(X_train, y_train)
         X_train_fs = fs.transform(X_train)
-        X_test_fs = None
-        if(X_test!=None):
-            X_test_fs = fs.transform(X_test)
+        X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
-
-
-
 
