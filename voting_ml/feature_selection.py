@@ -52,7 +52,7 @@ class FeatureSelection:
                 except KeyError:
                     raise KeyError("The line containing necessary questions cannot be split to get a list of questions. Please make sure the questions in the file are separated by comma.")
 
-        self._poll_data = data.PollDataProxy(remove_nan=False, convert_to_int=False)
+        self._poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
 
         if(self._bool_necess_que):
             self._ftsel_data, self._ftsel_quelist = self._poll_data.all_data(self._list_necess_que)
