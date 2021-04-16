@@ -72,10 +72,10 @@ def main():
     # dictionary for hyperparameter search
     param_space = {
         'criterion': ['gini', 'entropy'],
-        'max_depth': [None, 1, 5, 10],
+        'max_depth': [2, 3, 4, 5, 7],
         'min_samples_split': [2, 5, 10],
-        'min_samples_leaf': [1, 2, 5, 10],
-        'max_leaf_nodes': [2, 5, 10, 20, 30],
+        'min_samples_leaf': [2, 5, 10],
+        'max_leaf_nodes': [2, 4, 6, 8, 10, 12, 15],
     }
 
     # determine best parameters
