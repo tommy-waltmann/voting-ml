@@ -1,5 +1,6 @@
 import numpy as np
 import sklearn
+import subprocess
 from sklearn import model_selection, tree
 
 import data
@@ -96,8 +97,6 @@ def main():
     print("Train Accuracy: {}".format(train_acc))
 
     # write the graph data to a dot file
-    # $ dot -Tpng graph.dot -o graph.png
-    #eature_names = ordered_difference(all_questions, ['voter_category'])
     class_names = ['rarely/never', 'sporadic', 'always']
     graph_data = tree.export_graphviz(clf,
                                       out_file="graph.dot",
@@ -106,6 +105,10 @@ def main():
                                       filled=True,
                                       rounded=True,
                                       special_characters=True)
+    # write the .dot file to a png
+    command = "dot -Tpng graph.dot -o graph1.png"
+    process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+    process.communicate()
 
 
 if __name__ == "__main__":
