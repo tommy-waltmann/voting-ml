@@ -358,5 +358,61 @@ class FeatureSelection:
         X_train_fs = fs.transform(X_train)
         X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
+    
+    def def Nmaxelements(self, list1, N):
+        final_list = []
+        for i in range(0, N): 
+            max1 = 0 
+            for j in range(len(list1)):
+                if list1[j] > max1:
+                    max1 = list1[j];
+
+            list1.remove(max1);
+            final_list.append(max1)
+
+        return final_list
         
-        
+    def ftsel_decision_tree_method(self, data_dict, num_features = 20):
+
+        X_train = data_dict["X_train"].astype(str)
+        X_test = data_dict["X_test"].astype(str)
+        y_train = data_dict["y_train"].astype(str)
+        y_test = data_dict["y_test"].astype(str)
+
+        # prepare input data
+        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+
+        # prepare output data
+        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+
+        model = DecisionTreeClassifier()
+        model.fit(X_train_enc, y_train_enc)
+
+        importance = model.feature_importances_
+
+        best_fts_scores = Nmaxelements(list(importance), num_features)
+        best_fts = []
+
+
+        for score in best_fts_scores:
+            ind = np.where(importance == score)
+            best_fts.append(df.columns[ind][0])
+
+        plt.bar(best_fts, best_fts_scores)
+        plt.xticks(rotation = 90)
+        plt.xlabel('Features')
+        plt.ylabel('Score')
+        plt.title("Scores of the best 20 features")
+        image_name = '../output/'+self._run_name+'/scores-from-decision-tree-method.png'
+        plt.savefig(image_name)
+        plt.show()
+
+        if not os.path.exists("../output/"+self._run_name+"/"):
+            os.makedirs("../output/"+self._run_name+"/")
+
+        str_questions = ",".join(best_fts)
+        o_ftsel_que_file = open("../output/"+self._run_name+"/"+"Decision_tree_ftsel_questions_list.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
+
+        return ftsel_data_dict, best_fts   
