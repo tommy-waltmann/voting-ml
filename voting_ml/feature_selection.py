@@ -12,6 +12,7 @@ from sklearn.feature_selection import chi2,mutual_info_classif
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.tree import DecisionTreeClassifier
 
 class FeatureSelection:
     ''' This class provides several methods to select features from the given data.
@@ -359,7 +360,7 @@ class FeatureSelection:
         X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
     
-    def def Nmaxelements(self, list1, N):
+    def Nmaxelements(self, list1, N):
         final_list = []
         for i in range(0, N): 
             max1 = 0 
@@ -372,12 +373,11 @@ class FeatureSelection:
 
         return final_list
         
-    def ftsel_decision_tree_method(self, data_dict, num_features = 20):
-
-        X_train = data_dict["X_train"].astype(str)
-        X_test = data_dict["X_test"].astype(str)
-        y_train = data_dict["y_train"].astype(str)
-        y_test = data_dict["y_test"].astype(str)
+    def ftsel_decision_tree_method(self, dataframe, input_test_size, num_features = 20):
+        
+        X = dataframe.iloc[:,:-1].astype(str)
+        y = dataframe.iloc[:,-1].astype(str)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=input_test_size, random_state=1)
 
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
@@ -390,13 +390,13 @@ class FeatureSelection:
 
         importance = model.feature_importances_
 
-        best_fts_scores = Nmaxelements(list(importance), num_features)
+        best_fts_scores = self.Nmaxelements(list(importance), num_features)
         best_fts = []
 
 
         for score in best_fts_scores:
             ind = np.where(importance == score)
-            best_fts.append(df.columns[ind][0])
+            best_fts.append(dataframe.columns[ind][0])
 
         plt.bar(best_fts, best_fts_scores)
         plt.xticks(rotation = 90)
@@ -407,12 +407,19 @@ class FeatureSelection:
         plt.savefig(image_name)
         plt.show()
 
-        if not os.path.exists("../output/"+self._run_name+"/"):
-            os.makedirs("../output/"+self._run_name+"/")
+        if not os.path.isdir("../output/"+self._run_name):
+            os.mkdir("../output/"+self._run_name)
 
         str_questions = ",".join(best_fts)
         o_ftsel_que_file = open("../output/"+self._run_name+"/"+"Decision_tree_ftsel_questions_list.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
+        
+        ftsel_data_dict = {
+            'X_train': X_train,
+            'X_test': X_test,
+            'y_train': y_train,
+            'y_test': y_test
+        }
 
         return ftsel_data_dict, best_fts   
