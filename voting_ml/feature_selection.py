@@ -376,12 +376,13 @@ class FeatureSelection:
     def ftsel_decision_tree_method(self, dataframe, input_test_size, num_features = 20):
         
         X = dataframe.iloc[:,:-1].astype(str)
+        target_column = dataframe.columns[-1]
         y = dataframe.iloc[:,-1].astype(str)
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=input_test_size, random_state=1)
 
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
-
+        
         # prepare output data
         y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
@@ -403,23 +404,18 @@ class FeatureSelection:
         plt.xlabel('Features')
         plt.ylabel('Score')
         plt.title("Scores of the best 20 features")
+        if not os.path.exists("../output/"+self._run_name):
+            os.mkdir("../output/"+self._run_name)
+
         image_name = '../output/'+self._run_name+'/scores-from-decision-tree-method.png'
         plt.savefig(image_name)
         plt.show()
-
-        if not os.path.isdir("../output/"+self._run_name):
-            os.mkdir("../output/"+self._run_name)
 
         str_questions = ",".join(best_fts)
         o_ftsel_que_file = open("../output/"+self._run_name+"/"+"Decision_tree_ftsel_questions_list.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
         
-        ftsel_data_dict = {
-            'X_train': X_train,
-            'X_test': X_test,
-            'y_train': y_train,
-            'y_test': y_test
-        }
+        dataframe = dataframe[best_fts+[target_column]]
 
-        return ftsel_data_dict, best_fts   
+        return dataframe, best_fts   
