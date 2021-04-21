@@ -305,13 +305,16 @@ class FeatureSelection:
         
         return pca_data_dict, pca_components_dict
     
-    def ft_corr(self, X_train, questions):
+    def ft_corr(self, X_train, questions, correlated_questions):
         if(questions==None):
             fts = X_train.shape[1]
             questions_int = list(map(str, list(range(1,fts+1,1))))
             questions = ["ft_"+x for x in questions_int]
         KBest = len(questions)
         df = pd.DataFrame(X_train, columns = questions)
+        if correlated_questions != []:
+            df.drop(labels=correlated_features, axis=1, inplace=True)
+
         le=LabelEncoder()
         for column in df.columns:
             df[column] = le.fit_transform(df[column])
@@ -407,3 +410,19 @@ class FeatureSelection:
         dataframe = dataframe[best_fts+[target_column]]
 
         return dataframe, best_fts   
+    
+    def remove_correlated_features(self, X_train, questions, threshold_var):
+        '''
+        Use this function before the ft_corr function to return a list of correlated features w.r.t to some threshold.
+        '''
+        df_corr = self.ft_corr(X_train, questions)
+        correlated_features = []
+        for i in range(len(df_corr.columns)):
+            for j in range(i):
+                if abs(df_corr.iloc[i, j]) > threshold_var:
+                    colname = df_corr.columns[i]
+                    correlated_features.add(colname)
+            
+        print('The correlated features are',correlated_features)
+    
+        return correlated_features
