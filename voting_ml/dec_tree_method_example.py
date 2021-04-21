@@ -1,7 +1,15 @@
-import feature_selection
+import data
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OrdinalEncoder
 from sklearn.model_selection import train_test_split
+import numpy as np
 import pandas as pd
-
+from sklearn.tree import DecisionTreeClassifier
+import matplotlib.pyplot as plt
+import feature_selection
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OrdinalEncoder
+import seaborn as sns
 
 def main():
     dt_ftsel = feature_selection.FeatureSelection(necess_que_file="../extern/manage_data/list_all_questions.txt", unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt", bool_necess_que=False, run_name="test_dec_tree")
@@ -31,6 +39,7 @@ def main():
     plt.figure(figsize=(17,17))
     sns.heatmap(df_corr,linewidths=.1,cmap="YlGnBu", annot=True)
     plt.yticks(rotation=0)
+    plt.clf()
     
 if __name__ == "__main__":
     main()
