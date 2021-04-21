@@ -314,7 +314,7 @@ class FeatureSelection:
         KBest = len(questions)
         df = pd.DataFrame(X_train, columns = questions)
         if correlated_questions != []:
-            df.drop(labels=correlated_features, axis=1, inplace=True)
+            df.drop(labels=correlated_questions, axis=1, inplace=True)
 
         le=LabelEncoder()
         for column in df.columns:
