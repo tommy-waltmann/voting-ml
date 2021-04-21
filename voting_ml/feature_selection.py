@@ -359,19 +359,6 @@ class FeatureSelection:
         X_train_fs = fs.transform(X_train)
         X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
-    
-    def Nmaxelements(self, list1, N):
-        final_list = []
-        for i in range(0, N): 
-            max1 = 0 
-            for j in range(len(list1)):
-                if list1[j] > max1:
-                    max1 = list1[j];
-
-            list1.remove(max1);
-            final_list.append(max1)
-
-        return final_list
         
     def ftsel_decision_tree_method(self, dataframe, input_test_size, num_features = 20):
         
@@ -391,7 +378,8 @@ class FeatureSelection:
 
         importance = model.feature_importances_
 
-        best_fts_scores = self.Nmaxelements(list(importance), num_features)
+        best_fts_scores = np.sort(importance)
+        best_fts_scores = best_fts_scores[-num_features:]
         best_fts = []
 
 
