@@ -12,6 +12,7 @@ from sklearn.feature_selection import chi2,mutual_info_classif
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.decomposition import PCA
+from sklearn.tree import DecisionTreeClassifier
 
 class FeatureSelection:
     ''' This class provides several methods to select features from the given data.
@@ -358,4 +359,52 @@ class FeatureSelection:
         X_train_fs = fs.transform(X_train)
         X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
+        
+    def ftsel_decision_tree_method(self, dataframe, input_test_size, num_features = 20):
+        
+        X = dataframe.iloc[:,:-1].astype(str)
+        target_column = dataframe.columns[-1]
+        y = dataframe.iloc[:,-1].astype(str)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=input_test_size, random_state=1)
+
+        # prepare input data
+        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+        
+        # prepare output data
+        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+
+        model = DecisionTreeClassifier()
+        model.fit(X_train_enc, y_train_enc)
+
+        importance = model.feature_importances_
+
+        best_fts_scores = np.sort(importance)
+        best_fts_scores = best_fts_scores[-num_features:]
+        best_fts = []
+
+
+        for score in best_fts_scores:
+            ind = np.where(importance == score)
+            best_fts.append(dataframe.columns[ind][0])
+
+        plt.bar(best_fts, best_fts_scores)
+        plt.xticks(rotation = 90)
+        plt.xlabel('Features')
+        plt.ylabel('Score')
+        plt.title("Scores of the best 20 features")
+        if not os.path.exists("../output/"+self._run_name):
+            os.mkdir("../output/"+self._run_name)
+
+        image_name = '../output/'+self._run_name+'/scores-from-decision-tree-method.png'
+        plt.savefig(image_name)
+        plt.show()
+
+        str_questions = ",".join(best_fts)
+        o_ftsel_que_file = open("../output/"+self._run_name+"/"+"Decision_tree_ftsel_questions_list.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
+        
+        dataframe = dataframe[best_fts+[target_column]]
+
+        return dataframe, best_fts   
 
