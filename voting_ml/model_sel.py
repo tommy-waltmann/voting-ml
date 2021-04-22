@@ -8,6 +8,9 @@ import feature_selection
 
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import OrdinalEncoder
+import os
 
 class model_sel:
     '''This class defines all the basic parameters of a model. Creating such classes for different sets
@@ -63,16 +66,16 @@ class model_sel:
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.mkdir(self._outdir+self._run_name)
 
-    def select_model():
+    def select_model(self):
         # determine best parameters
         self._dt_clf = tree.DecisionTreeClassifier()
         grid_search = model_selection.GridSearchCV(self._dt_clf, self._param_space, cv=self._Kfold,
                                                scoring='accuracy', verbose=1)
         grid_search.fit(self._X_train_enc, self._y_train_enc, sample_weight=self._weights_train)
-        self._best_params = grid_search.best_params_
-        print("Best parameters:\n{}".format(best_params))
+        self.best_params = grid_search.best_params_
+        print("Best parameters:\n{}".format(self.best_params))
         # train the model with the best parameters, and report test/train accuracy
-        self._clf = tree.DecisionTreeClassifier(**best_params)
+        self._clf = tree.DecisionTreeClassifier(**self.best_params)
         self._clf.fit(self._X_train_enc, self._y_train_enc, sample_weight=self._weights_train)
 
         self._train_acc = self._clf.score(self._X_train_enc,self._y_train_enc,self._weights_train)
@@ -94,14 +97,27 @@ class model_sel:
         process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
         process.communicate()
 
-        self._model_sel_dict = {
+        # self._model_sel_dict = {
+        #     'test_size' : self._test_size,
+        #     'ftsel_method' : self._ftsel_method,
+        #     'Kfold' : self._Kfold,
+        #     'num_features' : self._num_features,
+        #     'corr_threshold' : self._corr_threshold,
+        #     'best_features' : self._questions,
+        #     'best_params' : self.best_params,
+        #     'train_acc' : self._train_acc,
+        #     'test_acc' : self._test_acc,
+        #     'tree' : self._outdir+self._run_name+"/graph.dot"
+        # }
+        
+        return {
             'test_size' : self._test_size,
             'ftsel_method' : self._ftsel_method,
             'Kfold' : self._Kfold,
             'num_features' : self._num_features,
             'corr_threshold' : self._corr_threshold,
             'best_features' : self._questions,
-            'best_params' : self._best_params,
+            'best_params' : self.best_params,
             'train_acc' : self._train_acc,
             'test_acc' : self._test_acc,
             'tree' : self._outdir+self._run_name+"/graph.dot"
