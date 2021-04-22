@@ -140,9 +140,14 @@ class FeatureSelection:
         ftsel_X_train = X_train[:,ft_sortidx]
         ftsel_X_test = X_test[:,ft_sortidx]
         ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
-
-        uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
         
+        uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
+
+        str_questions = ",".join(uncorr_questions)
+        o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"chi2_ftsel_ranked_uncorr_questions.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
+                    
         uncorr_data_dict = {
             'X_train': uncorr_X_train,
             'X_test': uncorr_X_test,
@@ -208,6 +213,11 @@ class FeatureSelection:
         ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
 
         uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
+
+        str_questions = ",".join(uncorr_questions)
+        o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"mutlinfo_ftsel_ranked_uncorr_questions.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
         
         uncorr_data_dict = {
             'X_train': uncorr_X_train,
@@ -321,15 +331,20 @@ class FeatureSelection:
         plt.xticks(rotation = 90)
         plt.xlabel('Features')
         plt.ylabel('Score')
-        plt.title("Scores of the best 20 features")
+        plt.title("Scores of the ranked features")
         if not os.path.exists(self._outdir+self._run_name):
             os.mkdir(self._outdir+self._run_name)
 
         image_name = self._outdir+self._run_name+'/scores-from-decision-tree-method.png'
         plt.savefig(image_name)
-        plt.show()
+        plt.clf()
 
         uncorr_X_train, uncorr_X_test, uncorr_best_fts = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, best_fts, threshold)
+
+        str_questions = ",".join(uncorr_best_fts)
+        o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"dt_ftsel_ranked_uncorr_questions.txt","w")
+        o_ftsel_que_file.write(str_questions)
+        o_ftsel_que_file.close()
         
         uncorr_data_dict = {
             'X_train' : uncorr_X_train,
@@ -346,7 +361,6 @@ class FeatureSelection:
         y_train = ranked_data_dict['y_train']
         y_test = ranked_data_dict['y_test']
         questions = []
-        print(ranked_questions)
         if(ranked_questions==None):
             fts = X_train.shape[1]
             questions_int = list(map(str, list(range(1,fts+1,1))))
@@ -405,7 +419,7 @@ class FeatureSelection:
                             colname = df_corr.columns[j]
                             correlated_features.append(colname)
                             correlated_features_idx.append(j)
-        print('The correlated features are',correlated_features)
+        #print('The correlated features are',correlated_features)
         uncorr_X_train = np.delete(X_train, correlated_features_idx, axis=1)
         uncorr_X_test = np.delete(X_test, correlated_features_idx, axis=1)
         uncorr_questions = list(np.delete(np.array(questions), correlated_features_idx))
