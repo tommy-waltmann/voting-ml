@@ -16,9 +16,10 @@ def main():
     #parameter space
     list_test_size = [0.1,0.15,0.2] # decide this
     list_ftsel_method = ['chi2','mutlinfo','pca','dt']
+    list_run_names = ['test_chi2', 'test_mutlinfo', 'test_pca', 'test_dt']
     list_num_features = [10,15,20] # decide this
     list_Kfold = [3,5]
-    list_corr_threshold = [0.5,0.6,0.7] # decide this
+    list_corr_threshold = [0.0, 0.5, 0.6, 0.7] # decide this
     
     #output dictrionary list
     list_output_dict = []
@@ -56,51 +57,53 @@ def main():
         weights_dict = { 
             'weights_train': weights_train,
             'weights_test': weights_test}
-        
+
         for meth in list_ftsel_method:
-            '''Create class objects of the current selection method'''
+            #Create class objects of the current selection method
             for thres in list_corr_threshold:
                 data_sel_dict, sel_questions = {}, []
                 if(meth=='chi2'):
-                   ftsel_obj = feature_selection.FeatureSelection(
+                    ftsel_obj = feature_selection.FeatureSelection(
                                necess_que_file="../extern/manage_data/list_all_questions.txt",
                                unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                                bool_necess_que=False,
                                run_name="test_chi2"
                                )
-                   data_sel_dict, sel_questions = ftsel_obj.ftsel_chi2(data_dict, thres)
+                    data_sel_dict, sel_questions = ftsel_obj.ftsel_chi2(data_dict, thres)
                 elif(meth=='mutlinfo'):
-                   ftsel_obj = feature_selection.FeatureSelection(
+                    ftsel_obj = feature_selection.FeatureSelection(
                                necess_que_file="../extern/manage_data/list_all_questions.txt",
                                unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                                bool_necess_que=False,
                                run_name="test_mutlinfo"
                                )
-                   data_sel_dict, sel_questions = ftsel_obj.ftsel_mutlinfo(data_dict, thres)
+                    data_sel_dict, sel_questions = ftsel_obj.ftsel_mutlinfo(data_dict, thres)
                 elif(meth=='pca'):
-                   ftsel_obj = feature_selection.FeatureSelection(
+                    ftsel_obj = feature_selection.FeatureSelection(
                                necess_que_file="../extern/manage_data/list_all_questions.txt",
                                unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                                bool_necess_que=False,
                                run_name="test_pca"
                                )
-                   data_sel_dict,_ = ftsel_obj.ftsel_pca(data_dict)
-                   fts = data_sel_dict['X_train'].shape[1]
-                   questions_int = list(map(str, list(range(1,fts+1,1))))
-                   sel_questions = ["ft_"+x for x in questions_int]
+                    data_sel_dict,_ = ftsel_obj.ftsel_pca(data_dict)
+                    fts = data_sel_dict['X_train'].shape[1]
+                    questions_int = list(map(str, list(range(1,fts+1,1))))
+                    sel_questions = ["ft_"+x for x in questions_int]
                 elif(meth=='dt'):
-                   ftsel_obj = feature_selection.FeatureSelection(
+                    ftsel_obj = feature_selection.FeatureSelection(
                                necess_que_file="../extern/manage_data/list_all_questions.txt",
                                unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                                bool_necess_que=False,
                                run_name="test_dt"
                                )
-                   data_sel_dict, sel_questions = ftsel_obj.ftsel_decision_tree_method(data_dict, thres)
+                    data_sel_dict, sel_questions = ftsel_obj.ftsel_decision_tree_method(data_dict, thres)
+                    
+                same_selected_questions = same_features(thres, data_dict, list_ftsel_method, listlist_run_names)
                 for num in list_num_features:
                 
                     for K in list_Kfold:
                         '''Here create a class onject of "model_sel" and output all the best parameters and values into "list_output_dict". Then, can create a .csv file to list all the models and accuracies.'''
-                        model_obj = model_sel.model_sel(ts, meth, K, num, thres, data_sel_dict ,weights_dict, sel_questions, outdir).select_model()
+                        model_obj = model_sel.model_sel(ts, meth, K, num, thres, data_sel_dict ,weights_dict, same_selected_questions, outdir).select_model()
                      #   intermediate = model_obj.select_model()
                         acc.append(model_obj['test_acc'])
                         
@@ -131,6 +134,38 @@ def separate_weights(X_train, column_names):
     new_X_train = np.delete(X_train, weight_column_idx, axis=1)
     return new_X_train, weights
 
+def same_elements(list1,lis2,list2):
+    s1 = set(list1)
+    s2 = set(list2)
+    s3 = set(list33)
+      
+    # Calculates intersection of 
+    # sets on s1 and s2
+    set1 = s1.intersection(s2) 
+      
+    # Calculates intersection of sets
+    # on set1 and s3
+    result_set = set1.intersection(s3)
+      
+    # Converts resulting set to list
+    final_list = list(result_set)
+    return final_list
 
+def same_features(thres, data_dict, list_ftsel_method, listlist_run_names):
+    nested_sel_questions = []
+    for meth,test in zip(list_ftsel_method, listlist_run_names):
+        if test != 'test_pca':
+            ftsel_obj = feature_selection.FeatureSelection(
+                       necess_que_file="../extern/manage_data/list_all_questions.txt",
+                       unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                       bool_necess_que=False,
+                       run_name=test
+                       )
+            data_sel_dict, sel_questions = ftsel_obj.ftsel_chi2(data_dict, thres)
+            nested_sel_questions.append(sel_questions)
+                    
+    same_sel_questions = same_elements(*nested_sel_questions)
+    return same_sel_questions
+        
 if __name__ == "__main__":
     main()
