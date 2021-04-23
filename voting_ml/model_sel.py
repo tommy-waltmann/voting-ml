@@ -81,7 +81,7 @@ class model_sel:
         self._train_acc = self._clf.score(self._X_train_enc,self._y_train_enc,self._weights_train)
         print("Train Accuracy: {}".format(self._train_acc))
         self._test_acc = self._clf.score(self._X_test_enc,self._y_test_enc,self._weights_test)
-        print("Train Accuracy: {}".format(self._test_acc))
+        print("Test Accuracy: {}".format(self._test_acc))
         
         # write the graph data to a dot file
         class_names = ['always', 'rarely/never', 'sporadic']
