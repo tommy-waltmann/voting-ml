@@ -97,7 +97,7 @@ def main():
     print("Train Accuracy: {}".format(train_acc))
 
     # write the graph data to a dot file
-    class_names = ['rarely/never', 'sporadic', 'always']
+    class_names = ['always', 'sporadic', 'rarely/never']
     graph_data = tree.export_graphviz(clf,
                                       out_file="graph.dot",
                                       feature_names=ftsel_questions,
@@ -113,3 +113,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+B
