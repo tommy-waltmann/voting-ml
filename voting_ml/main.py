@@ -25,6 +25,9 @@ def main():
 
     # output directory path
     outdir = "../results/run1/"
+
+    if(not os.path.isdir(outdir)):
+        os.mkdir(outdir)
     
     #splitting data and weights into train, test (refer to optimal_params.py)
     poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
