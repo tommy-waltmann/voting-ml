@@ -64,7 +64,7 @@ class model_sel:
         }
         '''
         self._outdir = outdir
-        self._run_name = "ts{0}_run{1}_{2}_Nfts{3}_Kfold{4}".format(self._test_size,self._run_num,self._ftsel_method,self._num_features,self._Kfold)
+        self._run_name = "ts{0}_run{1}_{2}_Nfts{3}_Kfold{4}_thres{5}".format(self._test_size,self._run_num,self._ftsel_method,self._num_features,self._Kfold,self._corr_threshold)
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.mkdir(self._outdir+self._run_name)
 
@@ -96,8 +96,8 @@ class model_sel:
                                       special_characters=True)
         # write the .dot file to a png
         command = "dot -Tpng "+self._outdir+self._run_name+"/graph.dot -o "+self._outdir+self._run_name+"/graph.png"
-        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        process.communicate()
+        #process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        #process.communicate()
         
         self._model_sel_dict = {
             'test_size' : self._test_size,

@@ -14,26 +14,26 @@ import seaborn as sns
 def main():
 
     #parameter space
-    list_test_size = [0.1]#,0.15,0.2] # decide this
+    list_test_size = [0.2]#,0.15,0.2] # decide this
     list_ftsel_method = ['chi2','mutlinfo','pca','dt']
     list_run_names = ['test_chi2', 'test_mutlinfo', 'test_pca', 'test_dt']
     #list_num_features = [10,15,20] # decide this
-    list_num_features = [50]
+    list_num_features = [99]
     list_Kfold = [5]#,5]
-    list_corr_threshold = [1]#, 0.5, 0.6, 0.7] # decide this
-    repeat = 1
+    list_corr_threshold = [1, 0.5, 0.6, 0.7] # decide this
+    repeat = 5
     param_space = {
             'criterion': ['gini', 'entropy'],
-            'max_depth': [2, 3, 4, 5, 7],
+            'max_depth': [2, 3, 4, 5],#, 7],
             'min_samples_split': [2, 5, 10],
             'min_samples_leaf': [2, 5, 10],
-            'max_leaf_nodes': [2, 4, 6, 8, 10, 12, 15],
+            'max_leaf_nodes': [2, 4, 6, 8, 10]#, 12, 15],
     }
     #output dictrionary list
     list_output_dict = []
 
     # output directory path
-    outdir = "../results/run_combined/"
+    outdir = "../results/run_combined_2/"
     
     if(not os.path.isdir(outdir)):
         os.mkdir(outdir) 
@@ -47,9 +47,9 @@ def main():
     acc = []
     
     '''refer to optimal_params.py. Functions from this python scripts are transferred here. (get_bad_questions() and separate_weights().)'''
-    for run_num in range(repeat):
-        for ts in list_test_size:
-            
+    
+    for ts in list_test_size:
+        for run_num in range(repeat):    
             all_data, all_data_questions = poll_data.all_data_except(get_bad_questions())
             X = all_data[:, :-1]
             y = all_data[:, -1]
@@ -141,7 +141,7 @@ def main():
                         o_models_file.write(str(run_num)+",")
                         o_models_file.write("combined,")
                         o_models_file.write(str(K)+",")
-                        o_models_file.write(str(num)+",")
+                        o_models_file.write(str(len(same_selected_questions))+",")
                         o_models_file.write(str(thres)+",")
                         for ii in range(len(model_obj['best_features'])):
                             o_models_file.write(model_obj['best_features'][ii]+" ")

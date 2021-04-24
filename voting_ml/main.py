@@ -48,9 +48,9 @@ def main():
     acc = []
     
     '''refer to optimal_params.py. Functions from this python scripts are transferred here. (get_bad_questions() and separate_weights().)'''
-    for run_num in range(repeat):
-        for ts in list_test_size:
-            
+    
+    for ts in list_test_size:
+        for run_num in range(repeat):
             all_data, all_data_questions = poll_data.all_data_except(get_bad_questions())
             X = all_data[:, :-1]
             y = all_data[:, -1]
