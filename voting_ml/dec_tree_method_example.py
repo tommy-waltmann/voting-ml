@@ -13,25 +13,23 @@ import seaborn as sns
 
 def main():
     dt_ftsel = feature_selection.FeatureSelection(necess_que_file="../extern/manage_data/list_all_questions.txt", unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt", bool_necess_que=False, run_name="test_dec_tree")
-    #dataframe = pd.DataFrame(dt_ftsel.get_ftsel_original_data(), columns= dt_ftsel._ftsel_quelist)
+
     dt_dataset = dt_ftsel.get_ftsel_original_data()
     X = dt_dataset[:, :-1]
     y = dt_dataset[:,-1]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random_state=1)
-
     dt_data_dict = {
         'X_train': X_train,
         'X_test': X_test,
         'y_train': y_train,
         'y_test': y_test
     }
+    dt_data_ftsel_dict, dt_ftsel_questions = dt_ftsel.ftsel_decision_tree_method(dt_data_dict,0.5)
+    dt_data_sel_dict, dt_sel_questions = dt_ftsel.select_num_features(dt_data_ftsel_dict, 20, dt_ftsel_questions)
 
-    dt_data_ftsel_df, dt_ftsel_questions = dt_ftsel.ftsel_decision_tree_method(dt_data_dict, num_features = 20)
-    X = dt_data_ftsel_df[dt_ftsel_questions]
-    y = dt_data_ftsel_df.iloc[:,-1]
+    X_train = dt_data_sel_dict['X_train']
+    X_test = dt_data_sel_dict['X_test']
     
-    #X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=1)
-
     # prepare input data
     X_train_enc, X_test_enc, oe = dt_ftsel.prepare_inputs(X_train, X_test)
         

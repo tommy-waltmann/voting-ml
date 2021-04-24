@@ -85,6 +85,7 @@ def main():
     grid_search.fit(ftsel_X_train, ftsel_y_train, sample_weight=weights_train)
     best_params = grid_search.best_params_
     print("Best parameters:\n{}".format(best_params))
+
     # train the model with the best parameters, and report test/train accuracy
     clf = tree.DecisionTreeClassifier(**best_params)
     clf.fit(ftsel_X_train, ftsel_y_train, sample_weight=weights_train)
@@ -96,7 +97,7 @@ def main():
     print("Train Accuracy: {}".format(train_acc))
 
     # write the graph data to a dot file
-    class_names = ['rarely/never', 'sporadic', 'always']
+    class_names = ['always', 'rarely/never','sporadic']
     graph_data = tree.export_graphviz(clf,
                                       out_file="graph.dot",
                                       feature_names=ftsel_questions,
@@ -112,3 +113,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

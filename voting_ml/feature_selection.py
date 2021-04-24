@@ -118,6 +118,7 @@ class FeatureSelection:
             print('Chi2 - Feature %d - %d: %f and p-value: %f' % (i,fs_ft_scores_sort[i-1][0], fs_ft_scores_sort[i-1][1], fs_ft_scores_sort[i-1][2]))
 
         #Creating directory for the output
+
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.mkdir(self._outdir+self._run_name)
 
@@ -135,7 +136,6 @@ class FeatureSelection:
         image_name = self._outdir+self._run_name+"/"+"chi2_score_versus_feature_rank.png"
         plt.savefig(image_name)
         plt.clf()
-
         #Returning ranked features and labels
         ftsel_X_train = X_train[:,ft_sortidx]
         ftsel_X_test = X_test[:,ft_sortidx]
@@ -248,6 +248,7 @@ class FeatureSelection:
         eigen_vals = pca.explained_variance_
 
         #Creating directory for the output
+
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.mkdir(self._outdir+self._run_name)
 
@@ -386,11 +387,19 @@ class FeatureSelection:
             questions = ["ft_"+x for x in questions_int]
         KBest = len(questions)
         df = pd.DataFrame(X_train, columns = questions)
+
         le=LabelEncoder()
         for column in df.columns:
             df[column] = le.fit_transform(df[column])
         df_corr = df.corr(method='pearson').abs()
 
+        return df_corr
+
+    def plot_heatmap(self, X_train, questions):
+
+        df_corr = self.ft_corr(X_train, questions)
+        
+        KBest = df_corr.shape[0]
         plt.figure(figsize=(15,15))
         sns.heatmap(df_corr,linewidths=.1,cmap="YlGnBu", annot=True)
         plt.yticks(rotation=0)
@@ -458,3 +467,4 @@ class FeatureSelection:
         X_train_fs = fs.transform(X_train)
         X_test_fs = fs.transform(X_test)
         return X_train_fs, X_test_fs, fs
+
