@@ -94,7 +94,7 @@ class FeatureSelection:
         N_train = X_train.shape[0]
         N_test = X_test.shape[0]
         N_fts = X_train.shape[1]
-        
+
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
 
@@ -106,7 +106,7 @@ class FeatureSelection:
 
         # what are scores for the features
         ft_sortidx = fs.scores_.argsort()[::-1]
-        
+
         ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
         ft_num = ft_num.astype(int)
         fs_scores = fs.scores_.reshape(len(fs.scores_),1)
@@ -140,21 +140,21 @@ class FeatureSelection:
         ftsel_X_train = X_train[:,ft_sortidx]
         ftsel_X_test = X_test[:,ft_sortidx]
         ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
-        
+
         uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
 
         str_questions = ",".join(uncorr_questions)
         o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"chi2_ftsel_ranked_uncorr_questions.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
-                    
+
         uncorr_data_dict = {
             'X_train': uncorr_X_train,
             'X_test': uncorr_X_test,
             'y_train': y_train,
             'y_test': y_test
         }
-        
+
         return uncorr_data_dict, uncorr_questions
 
     def ftsel_mutlinfo(self, data_dict, threshold):
@@ -178,7 +178,7 @@ class FeatureSelection:
 
         # what are scores for the features
         ft_sortidx = fs.scores_.argsort()[::-1]
-        
+
         ft_num = np.arange(len(fs.scores_)).reshape(len(fs.scores_),1)
         ft_num = ft_num.astype(int)
         fs_scores = fs.scores_.reshape(len(fs.scores_),1)
@@ -207,7 +207,7 @@ class FeatureSelection:
         plt.clf()
 
         #Returning ranked features and labels
-        
+
         ftsel_X_train = X_train[:,ft_sortidx]
         ftsel_X_test = X_test[:,ft_sortidx]
         ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
@@ -218,7 +218,7 @@ class FeatureSelection:
         o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"mutlinfo_ftsel_ranked_uncorr_questions.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
-        
+
         uncorr_data_dict = {
             'X_train': uncorr_X_train,
             'X_test': uncorr_X_test,
@@ -303,17 +303,17 @@ class FeatureSelection:
         }
 
         return pca_data_dict, pca_components_dict
- 
+
     def ftsel_decision_tree_method(self, data_dict, threshold):
-        
+
         X_train = data_dict["X_train"].astype(str)
         X_test = data_dict["X_test"].astype(str)
         y_train = data_dict["y_train"].astype(str)
         y_test = data_dict["y_test"].astype(str)
-        
+
         # prepare input data
         X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
-        
+
         # prepare output data
         y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
@@ -346,7 +346,7 @@ class FeatureSelection:
         o_ftsel_que_file = open(self._outdir+self._run_name+"/"+"dt_ftsel_ranked_uncorr_questions.txt","w")
         o_ftsel_que_file.write(str_questions)
         o_ftsel_que_file.close()
-        
+
         uncorr_data_dict = {
             'X_train' : uncorr_X_train,
             'X_test' : uncorr_X_test,
@@ -354,7 +354,7 @@ class FeatureSelection:
             'y_test' : y_test
         }
 
-        return uncorr_data_dict, uncorr_best_fts   
+        return uncorr_data_dict, uncorr_best_fts
 
     def select_num_features(self, ranked_data_dict, num_features, ranked_questions=None):
         X_train = ranked_data_dict['X_train']
@@ -379,7 +379,7 @@ class FeatureSelection:
         }
 
         return sel_data_dict, sel_questions
-            
+
     def ft_corr(self, X_train, questions):
         if(questions==None):
             fts = X_train.shape[1]
@@ -393,6 +393,13 @@ class FeatureSelection:
             df[column] = le.fit_transform(df[column])
         df_corr = df.corr(method='pearson').abs()
 
+        return df_corr
+
+    def plot_heatmap(self, X_train, questions):
+
+        df_corr = self.ft_corr(X_train, questions)
+
+        KBest = df_corr.shape[0]
         plt.figure(figsize=(15,15))
         sns.heatmap(df_corr,linewidths=.1,cmap="YlGnBu", annot=True)
         plt.yticks(rotation=0)
@@ -426,7 +433,7 @@ class FeatureSelection:
         uncorr_X_test = np.delete(X_test, correlated_features_idx, axis=1)
         uncorr_questions = list(np.delete(np.array(questions), correlated_features_idx))
         return uncorr_X_train, uncorr_X_test, uncorr_questions
-        
+
     def separate_ft_label(self, dataset, label=None):
         X = None
         y = None

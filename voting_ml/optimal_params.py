@@ -63,7 +63,11 @@ def main():
         bool_necess_que=False,
         run_name="test_chi2"
     )
-    data_ftsel_dict, ftsel_questions = chi2_ftsel.ftsel_chi2(data_dict, KBest=20)
+    ### This doesn't work anymore, data needs to not be negative for some reason
+    data_ftsel_dict, ftsel_questions = chi2_ftsel.ftsel_KBest(data_dict['X_train'],
+                                                              data_dict['y_train'],
+                                                              data_dict['X_test'],
+                                                              K=20)
     ftsel_X_train = data_ftsel_dict['X_train']
     ftsel_X_test = data_ftsel_dict['X_test']
     ftsel_y_train = data_ftsel_dict['y_train']
@@ -97,7 +101,7 @@ def main():
     print("Train Accuracy: {}".format(train_acc))
 
     # write the graph data to a dot file
-    class_names = ['always', 'sporadic', 'rarely/never']
+    class_names = ['rarely/never', 'sporadic', 'always']
     graph_data = tree.export_graphviz(clf,
                                       out_file="graph.dot",
                                       feature_names=ftsel_questions,
