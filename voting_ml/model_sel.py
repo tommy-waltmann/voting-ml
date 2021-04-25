@@ -2,6 +2,7 @@ import numpy as np
 import sklearn
 import subprocess
 from sklearn import model_selection, tree
+
 import data
 import feature_selection
 
@@ -28,7 +29,7 @@ class model_sel:
         questions : ranked feature-names corresponding to the train and test data
         outdir : output directory path where all the plots and output files will be stored.
         '''
-        
+
         self._test_size = test_size
         self._run_num = run_num
         self._ftsel_method = ftsel_method
@@ -42,7 +43,7 @@ class model_sel:
         self._questions = questions[0:self._num_features]
         self._weights_train = weights_dict['weights_train']
         self._weights_test = weights_dict['weights_test']
-        
+
         if(self._ftsel_method!='pca'):
             # prepare input data
             self._X_train_enc, self._X_test_enc, self._oe = self.prepare_inputs(self._X_train, self._X_test)
@@ -84,7 +85,7 @@ class model_sel:
         print("Train Accuracy: {}".format(self._train_acc))
         self._test_acc = self._clf.score(self._X_test_enc,self._y_test_enc,self._weights_test)
         print("Test Accuracy: {}".format(self._test_acc))
-        
+
         # write the graph data to a dot file
         class_names = ['always', 'rarely/never', 'sporadic']
         graph_data = tree.export_graphviz(self._clf,
@@ -98,7 +99,7 @@ class model_sel:
         command = "dot -Tpng "+self._outdir+self._run_name+"/graph.dot -o "+self._outdir+self._run_name+"/graph.png"
         #process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
         #process.communicate()
-        
+
         self._model_sel_dict = {
             'test_size' : self._test_size,
             'run_num' : self._run_num,
@@ -112,9 +113,9 @@ class model_sel:
             'test_acc' : self._test_acc,
             'tree' : self._outdir+self._run_name+"/graph.dot"
         }
-        
+
         return self._model_sel_dict
-        
+
     def prepare_inputs(self, X_train, X_test):
         oe = OrdinalEncoder()
         oe.fit(X_train)
@@ -128,4 +129,4 @@ class model_sel:
         y_train_enc = le.transform(y_train)
         y_test_enc = le.transform(y_test)
         return y_train_enc, y_test_enc, le
-        
+

@@ -29,7 +29,7 @@ def main():
     }
 
     repeat = 1
-    
+
     #output dictrionary list
     list_output_dict = []
 
@@ -41,14 +41,14 @@ def main():
 
     o_models_file = open(outdir+"models.csv","w")
     o_models_file.write("test size,run num,ftsel method,Kfold,number of features,correlation threshold,best features,criterion,max_depth,max_leaf_nodes,min_samples_leaf,min_samples_split,training accuracy,test accuracy\n")
-    
+
     #splitting data and weights into train, test (refer to optimal_params.py)
     poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
-    
+
     acc = []
-    
+
     '''refer to optimal_params.py. Functions from this python scripts are transferred here. (get_bad_questions() and separate_weights().)'''
-    
+
     for ts in list_test_size:
         for run_num in range(repeat):
             all_data, all_data_questions = poll_data.all_data_except(get_bad_questions())
@@ -62,18 +62,18 @@ def main():
 
             print("Number of Training Samples:", len(X_train))
             print("Number of Testing Samples:", len(X_test))
-            
-            
+
+
             data_dict = {
                 'X_train': X_train,
                 'X_test': X_test,
                 'y_train': y_train,
                 'y_test': y_test
             }
-            weights_dict = { 
+            weights_dict = {
                 'weights_train': weights_train,
                 'weights_test': weights_test}
-            
+
             for meth in list_ftsel_method:
                 '''Create class objects of the current selection method'''
                 for thres in list_corr_threshold:
@@ -122,7 +122,7 @@ def main():
                             model_obj = model_sel.model_sel(ts, run_num, meth, param_space, K, num, thres, data_sel_dict ,weights_dict, sel_questions, outdir).select_model()
                             #   intermediate = model_obj.select_model()
                             acc.append(model_obj['test_acc'])
-                            
+
                             o_models_file.write(str(ts)+",")
                             o_models_file.write(str(run_num)+",")
                             o_models_file.write(meth+",")
@@ -140,30 +140,30 @@ def main():
                             o_models_file.write(str(model_obj['train_acc'])+",")
                             o_models_file.write(str(model_obj['test_acc'])+",")
                             o_models_file.write("\n")
-                            
+
                             list_output_dict.append(model_obj)
     '''Once all the models are run, select the model with best test accuracy and return the output dict for that model.'''
     o_models_file.close()
-    
+
     best_index = np.argmax(acc)
     best_model_dict = list_output_dict[best_index]
 
     print("The best model parameters:")
     print(best_model_dict)
-    
-                    
+
+
 def get_bad_questions():
     f = open("../extern/manage_data/list_unnecessary_columns.txt", 'r')
     bad_questions = f.readline().split(',')
-    bad_questions[-1] = bad_questions[-1][:-1]  # chop the \n off the end                                                                    
-    bad_questions.remove('weight')  # need weight for training                                                                               
+    bad_questions[-1] = bad_questions[-1][:-1]  # chop the \n off the end
+    bad_questions.remove('weight')  # need weight for training
     return bad_questions
 
 
 def separate_weights(X_train, column_names):
-    """                                                                                                                                      
-    Removes the column containing weights from X_train, and returns it as                                                                    
-    a separate array.                                                                                                                        
+    """
+    Removes the column containing weights from X_train, and returns it as
+    a separate array.
     """
     weight_column_idx = column_names.index('weight')
     weights = X_train[:, weight_column_idx]
