@@ -87,7 +87,7 @@ class model_sel:
         print("Test Accuracy: {}".format(self._test_acc))
 
         # write the graph data to a dot file
-        class_names = ['always', 'rarely/never', 'sporadic']
+        class_names = ['rarely/never', 'sporadic', 'always']
         graph_data = tree.export_graphviz(self._clf,
                                       out_file=self._outdir+self._run_name+"/graph.dot",
                                       feature_names=self._questions,
@@ -97,8 +97,8 @@ class model_sel:
                                       special_characters=True)
         # write the .dot file to a png
         command = "dot -Tpng "+self._outdir+self._run_name+"/graph.dot -o "+self._outdir+self._run_name+"/graph.png"
-        #process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        #process.communicate()
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        process.communicate()
 
         self._model_sel_dict = {
             'test_size' : self._test_size,
