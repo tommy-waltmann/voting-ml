@@ -18,9 +18,10 @@ def main():
     list_ftsel_method = ['chi2','mutlinfo','pca','dt']
     list_run_names = ['test_chi2', 'test_mutlinfo', 'test_pca', 'test_dt']
     #list_num_features = [10,15,20] # decide this
-    list_num_features = [99]
+    list_num_features = [20]#[99]
+    all_fts = True
     list_Kfold = [5]#,5]
-    list_corr_threshold = [1, 0.5, 0.6, 0.7] # decide this
+    list_corr_threshold = [1, 0.6] # decide this
     repeat = 5
     param_space = {
             'criterion': ['gini', 'entropy'],
@@ -33,7 +34,7 @@ def main():
     list_output_dict = []
 
     # output directory path
-    outdir = "../results/run_combined_2/"
+    outdir = "../results/run_combined_1_all_fts/"
     
     if(not os.path.isdir(outdir)):
         os.mkdir(outdir) 
@@ -42,7 +43,7 @@ def main():
     o_models_file.write("test size,run num,ftsel method,Kfold,number of features,correlation threshold,best features,criterion,max_depth,max_leaf_nodes,min_samples_leaf,min_samples_split,training accuracy,test accuracy\n")
         
     #splitting data and weights into train, test (refer to optimal_params.py)
-    poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
+    poll_data = data.PollDataProxy(remove_nan=True, convert_to_float=True)
     
     acc = []
     
@@ -53,11 +54,14 @@ def main():
             all_data, all_data_questions = poll_data.all_data_except(get_bad_questions())
             X = all_data[:, :-1]
             y = all_data[:, -1]
-            X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+            X_train_neg, X_test_neg, y_train, y_test = model_selection.train_test_split(X, y,
                                                                                 test_size=ts,
                                                                                 shuffle=True)
-            X_train, weights_train, questions = separate_weights(X_train, all_data_questions[:-1])
-            X_test, weights_test, _ = separate_weights(X_test, all_data_questions[:-1])
+            X_train_neg, weights_train, questions = separate_weights(X_train_neg, all_data_questions[:-1])
+            X_test_neg, weights_test, _ = separate_weights(X_test_neg, all_data_questions[:-1])
+
+            X_train = np.where(X_train_neg == -1, 0, X_train_neg)
+            X_test = np.where(X_test_neg == -1, 0, X_test_neg)
 
             print("questions",questions)
             
@@ -84,57 +88,16 @@ def main():
             print("X_train",X_train)
             print("X_test",X_test)
             
-            
             #Create class objects of the current selection method
             for thres in list_corr_threshold:
-                data_sel_dict, sel_questions = {}, []
-                ftsel = feature_selection.FeatureSelection(
-                    necess_que_file="../extern/manage_data/list_all_questions.txt",
-                    unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
-                    bool_necess_que=False,
-                    run_name="test_ftsel_combined"
-                )
-                chi2_data_dict, chi2_questions = ftsel.ftsel_chi2(data_dict, thres)
-                print(chi2_questions)
-                mutlinfo_data_dict, mutlinfo_questions = ftsel.ftsel_mutlinfo(data_dict, thres)
-                print(mutlinfo_questions)
-                pca_data_dict,_ = ftsel.ftsel_pca(data_dict)
-                fts = pca_data_dict['X_train'].shape[1]
-                questions_int = list(map(str, list(range(1,fts+1,1))))
-                pca_questions = ["ft_"+x for x in questions_int]
                 
-                dt_data_dict, dt_questions = ftsel.ftsel_decision_tree_method(data_dict, thres)
-                print(dt_questions)
-                #print("chi2_questions",chi2_questions)
-                #print("mutlinfo_questions",mutlinfo_questions)
-                #print("dt_questions",dt_questions)
-                
-                for num in list_num_features:
-
-                    chi2_data_sel_dict, chi2_sel_questions = ftsel.select_num_features(chi2_data_dict, num, chi2_questions)
-                    mutlinfo_data_sel_dict, mutlinfo_sel_questions = ftsel.select_num_features(mutlinfo_data_dict, num, mutlinfo_questions)
-                    dt_data_sel_dict, dt_sel_questions = ftsel.select_num_features(dt_data_dict, num, dt_questions)
-                    
-                    same_selected_questions = same_elements(chi2_sel_questions, mutlinfo_sel_questions, dt_sel_questions)
-                    common_X_train = df_X_train.filter(items=same_selected_questions).to_numpy()
-                    common_X_test = df_X_test.filter(items=same_selected_questions).to_numpy()
-                    
-                    same_sel_data_dict = {
-                        'X_train' : common_X_train.astype(str),
-                        'X_test' : common_X_test.astype(str),
-                        'y_train' : y_train.astype(str),
-                        'y_test' : y_test.astype(str)
-                    }
-
-                    print("same questions:",same_selected_questions)
-                    print("same_Sel_data_dict",same_sel_data_dict)
-
-                    ftsel.plot_heatmap(same_sel_data_dict['X_train'], same_selected_questions)
-                    
+                if(all_fts):
+                    same_sel_data_dict = data_dict
+                    same_selected_questions = questions
                     for K in list_Kfold:
                         #Here create a class onject of "model_sel" and output all the best parameters and values into "list_output_dict". Then, can create a .csv file to list all the models and accuracies.
                         model_obj = model_sel.model_sel(ts, run_num, 'combined', param_space, K, len(same_selected_questions), thres, same_sel_data_dict ,weights_dict, same_selected_questions, outdir).select_model()
-                        
+
                         acc.append(model_obj['test_acc'])
 
                         o_models_file.write(str(ts)+",")
@@ -154,8 +117,102 @@ def main():
                         o_models_file.write(str(model_obj['train_acc'])+",")
                         o_models_file.write(str(model_obj['test_acc'])+",")
                         o_models_file.write("\n")
-                        
+
                         list_output_dict.append(model_obj)
+                else:
+                    data_sel_dict, sel_questions = {}, []
+                    chi2_ftsel = feature_selection.FeatureSelection(
+                        necess_que_file="../extern/manage_data/list_all_questions.txt",
+                        unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                        bool_necess_que=False,
+                        outdir=outdir+"fts_"+str(ts)+"_"+str(run_num)+"_"+str(thres)+"/",
+                        run_name="chi2"
+                    )
+                    chi2_data_dict, chi2_questions = chi2_ftsel.ftsel_chi2(data_dict, thres)
+                    
+                    mutlinfo_ftsel = feature_selection.FeatureSelection(
+                        necess_que_file="../extern/manage_data/list_all_questions.txt",
+                        unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                        bool_necess_que=False,
+                        outdir=outdir+"fts_"+str(ts)+"_"+str(run_num)+"_"+str(thres)+"/",
+                        run_name="mutlinfo"
+                    )
+                    mutlinfo_data_dict, mutlinfo_questions = mutlinfo_ftsel.ftsel_mutlinfo(data_dict, thres)
+                    
+                    pca_ftsel = feature_selection.FeatureSelection(
+                        necess_que_file="../extern/manage_data/list_all_questions.txt",
+                        unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                        bool_necess_que=False,
+                        outdir=outdir+"fts_"+str(ts)+"_"+str(run_num)+"_"+str(thres)+"/",
+                        run_name="pca"
+                    )
+                    pca_data_dict,_ = pca_ftsel.ftsel_pca(data_dict)
+                    
+                    fts = pca_data_dict['X_train'].shape[1]
+                    questions_int = list(map(str, list(range(1,fts+1,1))))
+                    pca_questions = ["ft_"+x for x in questions_int]
+                    
+                    dt_ftsel = feature_selection.FeatureSelection(
+                        necess_que_file="../extern/manage_data/list_all_questions.txt",
+                        unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                        bool_necess_que=False,
+                        outdir=outdir+"fts_"+str(ts)+"_"+str(run_num)+"_"+str(thres)+"/",
+                        run_name="dt"
+                    )
+                    dt_data_dict, dt_questions = dt_ftsel.ftsel_decision_tree_method(data_dict, thres)
+                    
+                    #print("chi2_questions",chi2_questions)
+                    #print("mutlinfo_questions",mutlinfo_questions)
+                    #print("dt_questions",dt_questions)
+                    
+                    for num in list_num_features:
+                        
+                        chi2_data_sel_dict, chi2_sel_questions = chi2_ftsel.select_num_features(chi2_data_dict, num, chi2_questions)
+                        mutlinfo_data_sel_dict, mutlinfo_sel_questions = mutlinfo_ftsel.select_num_features(mutlinfo_data_dict, num, mutlinfo_questions)
+                        dt_data_sel_dict, dt_sel_questions = dt_ftsel.select_num_features(dt_data_dict, num, dt_questions)
+                        
+                        same_selected_questions = same_elements(chi2_sel_questions, mutlinfo_sel_questions, dt_sel_questions)
+
+                        common_X_train = df_X_train.filter(items=same_selected_questions).to_numpy()
+                        common_X_test = df_X_test.filter(items=same_selected_questions).to_numpy()
+                        
+                        same_sel_data_dict = {
+                            'X_train' : common_X_train,
+                            'X_test' : common_X_test,
+                            'y_train' : y_train,
+                            'y_test' : y_test
+                        }
+                        
+                        print("same questions:",same_selected_questions)
+                        print("same_Sel_data_dict",same_sel_data_dict)
+                        
+                        chi2_ftsel.plot_heatmap(same_sel_data_dict['X_train'], same_selected_questions)
+                        
+                        for K in list_Kfold:
+                            #Here create a class onject of "model_sel" and output all the best parameters and values into "list_output_dict". Then, can create a .csv file to list all the models and accuracies.
+                            model_obj = model_sel.model_sel(ts, run_num, 'combined', param_space, K, len(same_selected_questions), thres, same_sel_data_dict ,weights_dict, same_selected_questions, outdir).select_model()
+                            
+                            acc.append(model_obj['test_acc'])
+                            
+                            o_models_file.write(str(ts)+",")
+                            o_models_file.write(str(run_num)+",")
+                            o_models_file.write("combined,")
+                            o_models_file.write(str(K)+",")
+                            o_models_file.write(str(len(same_selected_questions))+",")
+                            o_models_file.write(str(thres)+",")
+                            for ii in range(len(model_obj['best_features'])):
+                                o_models_file.write(model_obj['best_features'][ii]+" ")
+                            o_models_file.write(",")
+                            o_models_file.write(model_obj['best_params']['criterion']+",")
+                            o_models_file.write(str(model_obj['best_params']['max_depth'])+",")
+                            o_models_file.write(str(model_obj['best_params']['max_leaf_nodes'])+",")
+                            o_models_file.write(str(model_obj['best_params']['min_samples_leaf'])+",")
+                            o_models_file.write(str(model_obj['best_params']['min_samples_split'])+",")
+                            o_models_file.write(str(model_obj['train_acc'])+",")
+                            o_models_file.write(str(model_obj['test_acc'])+",")
+                            o_models_file.write("\n")
+                            
+                            list_output_dict.append(model_obj)
                         
     '''Once all the models are run, select the model with best test accuracy and return the output dict for that model.'''
 

@@ -14,11 +14,11 @@ import seaborn as sns
 def main():
 
     #parameter space
-    list_test_size = [0.1,0.15,0.2] # decide this
+    list_test_size = [0.2] # decide this
     list_ftsel_method = ['chi2','mutlinfo','pca','dt']
-    list_num_features = [10,15,20] # decide this
-    list_Kfold = [3,5]
-    list_corr_threshold = [1,0.5,0.6,0.7] # decide this
+    list_num_features = [20] # decide this
+    list_Kfold = [5]
+    list_corr_threshold = [1,0.6] # decide this
 
     param_space = {
         'criterion': ['gini', 'entropy'],
@@ -34,7 +34,7 @@ def main():
     list_output_dict = []
 
     # output directory path
-    outdir = "../results/run1/"
+    outdir = "../results/run_each_method/"
 
     if(not os.path.isdir(outdir)):
         os.mkdir(outdir)
@@ -43,7 +43,7 @@ def main():
     o_models_file.write("test size,run num,ftsel method,Kfold,number of features,correlation threshold,best features,criterion,max_depth,max_leaf_nodes,min_samples_leaf,min_samples_split,training accuracy,test accuracy\n")
 
     #splitting data and weights into train, test (refer to optimal_params.py)
-    poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
+    poll_data = data.PollDataProxy(remove_nan=True, convert_to_float=True)
 
     acc = []
 
@@ -54,11 +54,14 @@ def main():
             all_data, all_data_questions = poll_data.all_data_except(get_bad_questions())
             X = all_data[:, :-1]
             y = all_data[:, -1]
-            X_train, X_test, y_train, y_test = model_selection.train_test_split(X, y,
+            X_train_neg, X_test_neg, y_train, y_test = model_selection.train_test_split(X, y,
                                                                                 test_size=ts,
                                                                                 shuffle=True)
-            X_train, weights_train, questions = separate_weights(X_train, all_data_questions[:-1])
-            X_test, weights_test, _ = separate_weights(X_test, all_data_questions[:-1])
+            X_train_neg, weights_train, questions = separate_weights(X_train_neg, all_data_questions[:-1])
+            X_test_neg, weights_test, _ = separate_weights(X_test_neg, all_data_questions[:-1])
+
+            X_train = np.where(X_train_neg == -1, 0, X_train_neg)
+            X_test = np.where(X_test_neg == -1, 0, X_test_neg)
 
             print("Number of Training Samples:", len(X_train))
             print("Number of Testing Samples:", len(X_test))
@@ -84,7 +87,8 @@ def main():
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
                             unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                             bool_necess_que=False,
-                            run_name="test_chi2"
+                            outdir=outdir,
+                            run_name="chi2"
                         )
                         data_ranked_dict, ranked_questions = ftsel_obj.ftsel_chi2(data_dict, thres)
                     elif(meth=='mutlinfo'):
@@ -92,7 +96,8 @@ def main():
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
                             unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                             bool_necess_que=False,
-                            run_name="test_mutlinfo"
+                            outdir=outdir,
+                            run_name="mutlinfo"
                         )
                         data_ranked_dict, ranked_questions = ftsel_obj.ftsel_mutlinfo(data_dict, thres)
                     elif(meth=='pca'):
@@ -100,7 +105,8 @@ def main():
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
                             unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                             bool_necess_que=False,
-                            run_name="test_pca"
+                            outdir=outdir,
+                            run_name="pca"
                         )
                         data_ranked_dict,_ = ftsel_obj.ftsel_pca(data_dict)
                         fts = data_sel_dict['X_train'].shape[1]
@@ -111,7 +117,8 @@ def main():
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
                             unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
                             bool_necess_que=False,
-                            run_name="test_dt"
+                            outdir=outdir,
+                            run_name="dt"
                         )
                         data_ranked_dict, ranked_questions = ftsel_obj.ftsel_decision_tree_method(data_dict, thres)
                     for num in list_num_features:

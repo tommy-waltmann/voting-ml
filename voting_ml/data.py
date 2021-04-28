@@ -28,10 +28,10 @@ class PollDataProxy:
         self._total_questions = len(self.questions())
         # mapping the questions that have string answers to their keys
         self._string_int_mapping = {
-            'race': {'White': 0, 'Black': 1, 'Other/Mixed': 2, 'Hispanic': 3},
+            'race': {'White': 3, 'Black': 0, 'Other/Mixed': 2, 'Hispanic': 1},
             'income_cat': {'Less than $40k': 0, '$40-75k': 1, '$75-125k': 2, '$125k or more': 3},
             'gender': {'Female': 0, 'Male': 1},
-            'voter_category': {'rarely/never': 0, 'sporadic': 1, 'always': 2},
+            'voter_category': {'always': 0, 'sporadic': 1, 'rarely/never': 2},
             'educ': {'High school or less': 0, 'Some college': 1, 'College': 2},
             'ppage': {'25-': 0, '26-34': 1, '35-49': 2, '50-64': 3, '65+': 4}
         }

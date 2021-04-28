@@ -54,12 +54,15 @@ class FeatureSelection:
                 except KeyError:
                     raise KeyError("The line containing necessary questions cannot be split to get a list of questions. Please make sure the questions in the file are separated by comma.")
 
-        self._poll_data = data.PollDataProxy(remove_nan=False, convert_to_float=False)
+        self._poll_data = data.PollDataProxy(remove_nan=True, convert_to_float=True)
 
         if(self._bool_necess_que):
             self._ftsel_data, self._ftsel_quelist = self._poll_data.all_data(self._list_necess_que)
         else:
             self._ftsel_data, self._ftsel_quelist = self._poll_data.all_data_except(self._list_unnecess_que)
+
+        if(not os.path.isdir(self._outdir)):
+            os.mkdir(self._outdir)
 
         print("self._ftsel_data",self._ftsel_data.shape)
 
@@ -86,23 +89,23 @@ class FeatureSelection:
 
     def ftsel_chi2(self, data_dict, threshold):
 
-        X_train = data_dict["X_train"].astype(str)
-        X_test = data_dict["X_test"].astype(str)
-        y_train = data_dict["y_train"].astype(str)
-        y_test = data_dict["y_test"].astype(str)
+        X_train = data_dict["X_train"]
+        X_test = data_dict["X_test"]
+        y_train = data_dict["y_train"]
+        y_test = data_dict["y_test"]
 
         N_train = X_train.shape[0]
         N_test = X_test.shape[0]
         N_fts = X_train.shape[1]
 
         # prepare input data
-        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+        #X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
 
         # prepare output data
-        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+        #y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
         # feature selection
-        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, 'all', score_fn=chi2)
+        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train, y_train, X_test, 'all', score_fn=chi2)
 
         # what are scores for the features
         ft_sortidx = fs.scores_.argsort()[::-1]
@@ -122,16 +125,10 @@ class FeatureSelection:
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.mkdir(self._outdir+self._run_name)
 
-        # plot the scores
-        plt.bar([i for i in range(len(fs.scores_))], fs.scores_)
-        image = self._outdir+self._run_name+"/"+"chi2_scores_versus_features_barplot.png"
-        plt.savefig(image)
-        plt.clf()
-
         # Plot scores
         plt.plot(ft_num,fs_ft_scores_sort[:,1], label = "score versus feature rank")
         plt.xlabel('feature rank')
-        plt.ylabel('score')
+        plt.ylabel('Chi2-score')
         plt.legend()
         image_name = self._outdir+self._run_name+"/"+"chi2_score_versus_feature_rank.png"
         plt.savefig(image_name)
@@ -140,6 +137,15 @@ class FeatureSelection:
         ftsel_X_train = X_train[:,ft_sortidx]
         ftsel_X_test = X_test[:,ft_sortidx]
         ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
+
+        # plot the scores
+        plt.bar(ftsel_questions,fs_ft_scores_sort[:,1].reshape((len(ftsel_questions))))
+        plt.xticks(rotation = 90)
+        plt.xlabel('Features')
+        plt.ylabel('Chi2-Score')
+        image = self._outdir+self._run_name+"/"+"chi2_scores_versus_features_barplot.png"
+        plt.savefig(image)
+        plt.clf()
 
         uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
 
@@ -159,22 +165,22 @@ class FeatureSelection:
 
     def ftsel_mutlinfo(self, data_dict, threshold):
 
-        X_train = data_dict["X_train"].astype(str)
-        X_test = data_dict["X_test"].astype(str)
-        y_train = data_dict["y_train"].astype(str)
-        y_test = data_dict["y_test"].astype(str)
+        X_train = data_dict["X_train"]
+        X_test = data_dict["X_test"]
+        y_train = data_dict["y_train"]
+        y_test = data_dict["y_test"]
 
         N_train = X_train.shape[0]
         N_test = X_test.shape[0]
 
         # prepare input data
-        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+        #X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
 
         # prepare output data
-        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+        #y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
         # feature selection
-        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train_enc, y_train_enc, X_test_enc, 'all', score_fn=mutual_info_classif)
+        X_train_fs, X_test_fs, fs = self.ftsel_KBest(X_train, y_train, X_test, 'all', score_fn=mutual_info_classif)
 
         # what are scores for the features
         ft_sortidx = fs.scores_.argsort()[::-1]
@@ -191,8 +197,17 @@ class FeatureSelection:
         if(not os.path.isdir(self._outdir+self._run_name)):
             os.makedirs(os.path.join(self._outdir, self._run_name))
 
-        # plot the scores
-        plt.bar([i for i in range(len(fs.scores_))], fs.scores_)
+        #Returning ranked features and labels
+
+        ftsel_X_train = X_train[:,ft_sortidx]
+        ftsel_X_test = X_test[:,ft_sortidx]
+        ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
+        
+        # plot the scores                                                                                                                                                                                                              
+        plt.bar(ftsel_questions,fs_ft_scores_sort[:,1].reshape((len(ftsel_questions))))
+        plt.xticks(rotation = 90)
+        plt.xlabel('Features')
+        plt.ylabel('Mutual Information-Score')
         image = self._outdir+self._run_name+"/"+"mutlinfo_scores_versus_features_barplot.png"
         plt.savefig(image)
         plt.clf()
@@ -200,17 +215,11 @@ class FeatureSelection:
         # Plot scores
         plt.plot(ft_num,fs_ft_scores_sort[:,1], label = "score versus feature rank")
         plt.xlabel('feature rank')
-        plt.ylabel('score')
+        plt.ylabel('Mutual-information score')
         plt.legend()
         image_name = self._outdir+self._run_name+"/"+"mutlinfo_score_versus_feature_rank.png"
         plt.savefig(image_name)
         plt.clf()
-
-        #Returning ranked features and labels
-
-        ftsel_X_train = X_train[:,ft_sortidx]
-        ftsel_X_test = X_test[:,ft_sortidx]
-        ftsel_questions = list(np.array(self._ftsel_quelist)[ft_sortidx])
 
         uncorr_X_train, uncorr_X_test, uncorr_questions = self.remove_correlated_features(ftsel_X_train, ftsel_X_test, ftsel_questions, threshold)
 
@@ -230,20 +239,20 @@ class FeatureSelection:
 
     def ftsel_pca(self, data_dict):
 
-        X_train = data_dict["X_train"].astype(str)
-        X_test = data_dict["X_test"].astype(str)
-        y_train = data_dict["y_train"].astype(str)
-        y_test = data_dict["y_test"].astype(str)
+        X_train = data_dict["X_train"]
+        X_test = data_dict["X_test"]
+        y_train = data_dict["y_train"]
+        y_test = data_dict["y_test"]
 
         # prepare input data
         #print("X_train",X_train)
-        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+        #X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
 
         # prepare output data
-        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+        #y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
         pca = PCA()
-        pca.fit(X_train_enc)
+        pca.fit(X_train)
         transform_matrix = pca.components_.T
         eigen_vals = pca.explained_variance_
 
@@ -253,7 +262,7 @@ class FeatureSelection:
             os.mkdir(self._outdir+self._run_name)
 
         #print("Eigen values for first 20 principal components: ",eigen_vals[0:20])
-        rank_eigenval = np.arange(1,X_train_enc.shape[1]+1).reshape((X_train_enc.shape[1]))
+        rank_eigenval = np.arange(1,X_train.shape[1]+1).reshape((X_train.shape[1]))
         plt.plot(rank_eigenval,eigen_vals, label = "eigen-values")
         plt.xlabel('Rank of the eigenvalue')
         plt.ylabel('Eigen Value')
@@ -286,8 +295,8 @@ class FeatureSelection:
         print("Number of principal components needed to represent 99% of the total variance: ", num_99perVar)
 
         pca_data = data
-        pca_X_train = np.dot(X_train_enc,transform_matrix)
-        pca_X_test = np.dot(X_test_enc,transform_matrix)
+        pca_X_train = np.dot(X_train,transform_matrix)
+        pca_X_test = np.dot(X_test,transform_matrix)
 
         pca_data_dict = {
             'X_train': pca_X_train,
@@ -306,19 +315,19 @@ class FeatureSelection:
 
     def ftsel_decision_tree_method(self, data_dict, threshold):
 
-        X_train = data_dict["X_train"].astype(str)
-        X_test = data_dict["X_test"].astype(str)
-        y_train = data_dict["y_train"].astype(str)
-        y_test = data_dict["y_test"].astype(str)
+        X_train = data_dict["X_train"]
+        X_test = data_dict["X_test"]
+        y_train = data_dict["y_train"]
+        y_test = data_dict["y_test"]
 
         # prepare input data
-        X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
+        #X_train_enc, X_test_enc, oe = self.prepare_inputs(X_train, X_test)
 
         # prepare output data
-        y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
+        #y_train_enc, y_test_enc, le = self.prepare_targets(y_train, y_test)
 
         model = DecisionTreeClassifier()
-        model.fit(X_train_enc, y_train_enc)
+        model.fit(X_train, y_train)
 
         importance = model.feature_importances_
         ft_sortidx = importance.argsort()[::-1]
@@ -331,7 +340,7 @@ class FeatureSelection:
         plt.bar(best_fts, best_fts_scores)
         plt.xticks(rotation = 90)
         plt.xlabel('Features')
-        plt.ylabel('Score')
+        plt.ylabel('Decision tree importance- Score')
         plt.title("Scores of the ranked features")
         if not os.path.exists(self._outdir+self._run_name):
             os.mkdir(self._outdir+self._run_name)

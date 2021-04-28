@@ -44,16 +44,6 @@ class model_sel:
         self._weights_train = weights_dict['weights_train']
         self._weights_test = weights_dict['weights_test']
 
-        if(self._ftsel_method!='pca'):
-            # prepare input data
-            self._X_train_enc, self._X_test_enc, self._oe = self.prepare_inputs(self._X_train, self._X_test)
-            # prepare output data
-            self._y_train_enc, self._y_test_enc, self._le = self.prepare_targets(self._y_train, self._y_test)
-        else:
-            self._X_train_enc = self._X_train
-            self._X_test_enc = self._X_test
-            self._y_train_enc = self._y_train
-            self._y_test_enc = self._y_test
         self._param_space = param_space
         '''
         self._param_space = {
@@ -74,16 +64,16 @@ class model_sel:
         self._dt_clf = tree.DecisionTreeClassifier()
         grid_search = model_selection.GridSearchCV(self._dt_clf, self._param_space, cv=self._Kfold,
                                                scoring='accuracy', verbose=1)
-        grid_search.fit(self._X_train_enc, self._y_train_enc, sample_weight=self._weights_train)
+        grid_search.fit(self._X_train, self._y_train, sample_weight=self._weights_train)
         self.best_params = grid_search.best_params_
         print("Best parameters:\n{}".format(self.best_params))
         # train the model with the best parameters, and report test/train accuracy
         self._clf = tree.DecisionTreeClassifier(**self.best_params)
-        self._clf.fit(self._X_train_enc, self._y_train_enc, sample_weight=self._weights_train)
+        self._clf.fit(self._X_train, self._y_train, sample_weight=self._weights_train)
 
-        self._train_acc = self._clf.score(self._X_train_enc,self._y_train_enc,self._weights_train)
+        self._train_acc = self._clf.score(self._X_train,self._y_train,self._weights_train)
         print("Train Accuracy: {}".format(self._train_acc))
-        self._test_acc = self._clf.score(self._X_test_enc,self._y_test_enc,self._weights_test)
+        self._test_acc = self._clf.score(self._X_test,self._y_test,self._weights_test)
         print("Test Accuracy: {}".format(self._test_acc))
 
         # write the graph data to a dot file
@@ -97,8 +87,8 @@ class model_sel:
                                       special_characters=True)
         # write the .dot file to a png
         command = "dot -Tpng "+self._outdir+self._run_name+"/graph.dot -o "+self._outdir+self._run_name+"/graph.png"
-        #process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
-        #process.communicate()
+        process = subprocess.Popen(command.split(), stdout=subprocess.PIPE)
+        process.communicate()
 
         self._model_sel_dict = {
             'test_size' : self._test_size,
