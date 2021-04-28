@@ -1,9 +1,0 @@
-test size,run num,ftsel method,Kfold,number of features,correlation threshold,best features,criterion,max_depth,max_leaf_nodes,min_samples_leaf,min_samples_split,training accuracy,test accuracy
-0.2,0,chi2,5,20,1,ppage Q27_5 Q27_3 Q27_4 Q27_6 Q27_1 Q28_1 Q27_2 Q25 Q28_6 Q28_7 Q2_2 Q21 Q2_1 Q16 income_cat Q8_8 Q2_3 Q19_9 Q2_7 ,gini,7,15,2,2,0.6128864026873159,0.6143011265262587,
-0.2,0,chi2,5,20,0.6,ppage Q27_5 Q27_4 Q27_1 Q28_1 Q27_2 Q25 Q28_6 Q28_7 Q2_2 Q21 Q2_1 Q16 income_cat Q8_8 Q2_3 Q19_9 Q2_7 Q2_5 Q30 ,gini,7,15,10,2,0.6086275461988451,0.6051792944752274,
-0.2,0,mutlinfo,5,20,1,Q27_3 ppage Q27_2 Q27_1 Q27_4 Q27_5 Q27_6 Q28_1 Q21 Q20 Q2_1 Q25 Q11_1 Q23 Q15 Q9_4 Q2_3 Q3_4 Q18_7 Q28_3 ,gini,7,15,5,2,0.613480771631928,0.6138323420014746,
-0.2,0,mutlinfo,5,20,0.6,ppage Q27_3 Q27_2 Q27_4 Q18_3 Q2_1 Q25 Q20 Q5 Q21 Q3_5 Q28_1 Q18_8 Q2_6 Q28_3 Q8_4 Q19_3 Q9_4 Q19_10 Q15 ,entropy,7,15,2,2,0.5993961373673709,0.6108717043001648,
-0.2,0,pca,5,20,1,ft_1 ft_2 ft_3 ft_4 ft_5 ft_6 ft_7 ft_8 ft_9 ft_10 ft_11 ft_12 ft_13 ft_14 ft_15 ft_16 ft_17 ft_18 ft_19 ft_20 ,entropy,5,12,2,2,0.5307739826638227,0.4716138855652407,
-0.2,0,pca,5,20,0.6,ft_1 ft_2 ft_3 ft_4 ft_5 ft_6 ft_7 ft_8 ft_9 ft_10 ft_11 ft_12 ft_13 ft_14 ft_15 ft_16 ft_17 ft_18 ft_19 ft_20 ,entropy,5,12,2,2,0.5307739826638227,0.4716138855652407,
-0.2,0,dt,5,20,1,Q27_2 ppage Q27_5 income_cat Q3_6 Q8_5 Q17_4 Q4_6 Q9_2 Q15 Q4_5 Q8_9 Q4_3 Q3_5 Q3_3 Q27_4 Q6 Q8_1 Q2_2 Q8_8 ,gini,7,15,10,2,0.6124127984500424,0.5906151602804915,
-0.2,0,dt,5,20,0.6,Q27_2 ppage Q27_5 Q3_6 Q8_5 Q9_2 Q4_6 Q4_5 Q3_5 Q17_4 income_cat race Q8_9 Q27_4 Q15 Q8_8 Q8_4 Q2_4 Q2_2 Q6 ,gini,7,15,10,2,0.6124127984500424,0.5906151602804915,
