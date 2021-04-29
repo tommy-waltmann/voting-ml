@@ -20,3 +20,36 @@
    Reason for removing: Too many NA values.
 
 8. Q31, Q32, Q33 - Again too many NAs
+
+(b) list_2_unnecessary_columns.txt:
+    All the questions in list_unnecessary_columns.txt also present here.
+1. Q27 - "Thinking back to some recent elections, as best you remember, did you vote in the following elections?"
+    This feature appeared in many decision trees to be most important one. It also might have a direct implication towards the voting category of the voters. So, we decided to remove this question.
+
+(c) list_3_unnecessary_columns.txt:
+    All	the questions in list_2_unnecessary_columns.txt also present here.
+    All questions which had direct effect of 2020 elections have been removed.
+
+1. Q5 - "As far as making progress on the important issues facing the country, does it really matter who wins the 2020 presidential election, or will things be pretty much the same regardless of who is elected president?"
+
+2. Q11 - "Since February of 2020, have any of the following things happened to you?"
+
+3. Q20 - "Are you currently registered to vote?"
+
+4. Q21 - "On November 3, 2020 there will be an election for president, members of the United States Senate, House of Representatives, and other state and local offices. Do you plan to vote in the November 2020 election? If you have already voted, please select ‘yes.’"
+
+5. Q23 - "Which presidential candidate are you planning to support?"
+
+6. Q24 - "Regardless of your current voter registration status and plans to vote (including if you have already voted), what would be your preferred method of voting this year?"
+
+7. Q25 - "How closely are you following the 2020 presidential race?"
+
+(c) list_4_unnecessary_columns.txt:
+    All the questions in list_2_unnecessary_columns.txt also present here.
+    Also trying to remove the next question which becomes dominant after list 2. 
+1. Q28 - "Thinking back to the last few national elections that you voted in, which of the following were the most important reasons in your decision to vote? Please choose all that apply."
+
+(d) list_5_unnecessary_columns.txt:
+    After list 4, we see that Q2_1 is very dominant. We remove this question for the following reason:
+1. Q2_1 - "In your view, how important are each of the following to being a good American?" - 1. Voting in elections - rate as - 1.Very important 2.​ ​ Somewhat important 3.​ ​ Not so important 4.​ ​ Not at all important.
+We think that it is a direct relation between if you feel voting is important and if you are a frequent voter, hence it is a redundant information.
