@@ -28,13 +28,13 @@ def main():
         'max_leaf_nodes': [2, 4, 6, 8, 10, 12, 15],
     }
 
-    repeat = 1
+    repeat = 5
 
     #output dictrionary list
     list_output_dict = []
 
     # output directory path
-    outdir = "../results/run_each_method/"
+    outdir = "../results/run_5_each_method/"
 
     if(not os.path.isdir(outdir)):
         os.mkdir(outdir)
@@ -85,7 +85,7 @@ def main():
                     if(meth=='chi2'):
                         ftsel_obj = feature_selection.FeatureSelection(
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
-                            unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                            unnecess_que_file="../extern/manage_data/list_5_unnecessary_columns.txt",
                             bool_necess_que=False,
                             outdir=outdir,
                             run_name="chi2"
@@ -94,7 +94,7 @@ def main():
                     elif(meth=='mutlinfo'):
                         ftsel_obj = feature_selection.FeatureSelection(
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
-                            unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                            unnecess_que_file="../extern/manage_data/list_5_unnecessary_columns.txt",
                             bool_necess_que=False,
                             outdir=outdir,
                             run_name="mutlinfo"
@@ -103,7 +103,7 @@ def main():
                     elif(meth=='pca'):
                         ftsel_obj = feature_selection.FeatureSelection(
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
-                            unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                            unnecess_que_file="../extern/manage_data/list_5_unnecessary_columns.txt",
                             bool_necess_que=False,
                             outdir=outdir,
                             run_name="pca"
@@ -115,7 +115,7 @@ def main():
                     elif(meth=='dt'):
                         ftsel_obj = feature_selection.FeatureSelection(
                             necess_que_file="../extern/manage_data/list_all_questions.txt",
-                            unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt",
+                            unnecess_que_file="../extern/manage_data/list_5_unnecessary_columns.txt",
                             bool_necess_que=False,
                             outdir=outdir,
                             run_name="dt"
@@ -160,7 +160,7 @@ def main():
 
 
 def get_bad_questions():
-    f = open("../extern/manage_data/list_unnecessary_columns.txt", 'r')
+    f = open("../extern/manage_data/list_5_unnecessary_columns.txt", 'r')
     bad_questions = f.readline().split(',')
     bad_questions[-1] = bad_questions[-1][:-1]  # chop the \n off the end
     bad_questions.remove('weight')  # need weight for training
