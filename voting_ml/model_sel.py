@@ -77,7 +77,7 @@ class model_sel:
         print("Test Accuracy: {}".format(self._test_acc))
 
         # write the graph data to a dot file
-        class_names = ['always', 'rarely/never', 'sporadic']
+        class_names = ['always', 'sporadic', 'rarely/never']
         graph_data = tree.export_graphviz(self._clf,
                                       out_file=self._outdir+self._run_name+"/graph.dot",
                                       feature_names=self._questions,
