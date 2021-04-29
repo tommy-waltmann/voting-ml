@@ -33,9 +33,18 @@ def main():
     #output dictrionary list
     list_output_dict = []
 
-    # output directory path
+    # options for different runs                                                                                                                                                                          
+    1. Use unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt"
+    outdir = "../results/run_1_each_method/"
+    '''2. Use unnecess_que_file="../extern/manage_data/list_2_unnecessary_columns.txt"                                                                          
+    outdir = "../results/run_2_each_method/"
+    3. Use unnecess_que_file="../extern/manage_data/list_3_unnecessary_columns.txt"                                     
+    outdir = "../results/run_3_each_method/"                                                        
+    4. Use unnecess_que_file="../extern/manage_data/list_4_unnecessary_columns.txt"                     
+    outdir = "../results/run_4_each_method/"                                        
+    5. Use unnecess_que_file="../extern/manage_data/list_5_unnecessary_columns.txt"                                                                                          
     outdir = "../results/run_5_each_method/"
-
+    '''
     if(not os.path.isdir(outdir)):
         os.mkdir(outdir)
 

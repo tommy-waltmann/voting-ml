@@ -30,7 +30,7 @@ def main():
     #output dictrionary list
     list_output_dict = []
     
-    # options
+    # options for different runs
     1. Use unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt"
     outdir = "../results/run_combined_1_union_fts/"
     '''2. Use unnecess_que_file="../extern/manage_data/list_2_unnecessary_columns.txt"

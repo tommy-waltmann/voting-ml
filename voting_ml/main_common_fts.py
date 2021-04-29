@@ -32,8 +32,7 @@ def main():
     #output dictrionary list
     list_output_dict = []
 
-    # output directory path
-    ''' options: '''
+    #options: for different runs
     1. Use unnecess_que_file="../extern/manage_data/list_unnecessary_columns.txt"
     all_fts = True
     outdir = "../results/run_common_1_all_fts/"
